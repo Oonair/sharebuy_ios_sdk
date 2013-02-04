@@ -1,0 +1,164 @@
+ [
+  {
+  "price":"79.99 $",
+  "id":1,
+  "category":1,
+  "name":"Blazer with pockets and metallic buttons",
+  "part_number":1,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/thumbs/1a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/big/1a.jpg"
+  },
+  {
+  "price":"79.99 $",
+  "id":2,
+  "category":1,
+  "name":"Pop-Color Blazer",
+  "part_number":2,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/thumbs/2a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/big/2a.jpg"
+  },
+  {
+  "price":"69.99 $",
+  "id":3,
+  "category":1,
+  "name":"Zipped Blazer with Frill at the Waist",
+  "part_number":3,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/thumbs/3a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/big/3a.jpg"
+  },
+  {
+  "price":"49.99 $",
+  "id":4,
+  "category":1,
+  "name":"Striped Blazer",
+  "part_number":4,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/thumbs/4a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/big/4a.jpg"
+  },
+  {
+  "price":"59.99 $",
+  "id":5,
+  "category":1,
+  "name":"Dark Multiple Buttons Blazer",
+  "part_number":5,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/thumbs/5a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/big/5a.jpg"
+  },
+  {
+  "price":"69.99 $",
+  "id":6,
+  "category":1,
+  "name":"Multiple Buttons  Blazer",
+  "part_number":6,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/thumbs/6a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/blazers/big/6a.jpg"
+  },
+  {
+  "price":"39.99 $",
+  "id":7,
+  "category":2,
+  "name":"Curvy Basic Pants",
+  "part_number":7,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/thumbs/1a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/big/1a.jpg"
+  },
+  {
+  "price":"35.99 $",
+  "id":8,
+  "category":2,
+  "name":"Active Compression Pants",
+  "part_number":8,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/thumbs/2a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/big/2a.jpg"
+  },
+  {
+  "price":"29.99 $",
+  "id":9,
+  "category":2,
+  "name":"Boot-Cut Cords",
+  "part_number":9,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/thumbs/3a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/big/3a.jpg"
+  },
+  {
+  "price":"79.99 $",
+  "id":10,
+  "category":2,
+  "name":"Printed Flannel Lounge Pants",
+  "part_number":10,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/thumbs/4a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/big/4a.jpg"
+  },
+  {
+  "price":"79.99 $",
+  "id":11,
+  "category":2,
+  "name":"Skinny Ankle Pants",
+  "part_number":11,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/thumbs/5a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/big/5a.jpg"
+  },
+  {
+  "price":"69.99 $",
+  "id":12,
+  "category":2,
+  "name":"Bright Active Compression Pants",
+  "part_number":12,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/thumbs/6a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/troussers/big/6a.jpg"
+  },
+  {
+  "price":"49.99 $",
+  "id":13,
+  "category":3,
+  "name":"Tab-Sleeve Plaid-Chiffon Shirt",
+  "part_number":13,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/thumbs/1a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/big/1a.jpg"
+  },
+  {
+  "price":"59.99 $",
+  "id":14,
+  "category":3,
+  "name":"3/4-Sleeve Blouse",
+  "part_number":14,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/thumbs/2a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/big/2a.jpg"
+  },
+  {
+  "price":"69.99 $",
+  "id":15,
+  "category":3,
+  "name":"White Loouse Blouse",
+  "part_number":15,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/thumbs/3a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/big/3a.jpg"
+  },
+  {
+  "price":"39.99 $",
+  "id":16,
+  "category":3,
+  "name":"Split-Neck Blouse",
+  "part_number":16,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/thumbs/4a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/big/4a.jpg"
+  },
+  {
+  "price":"35.99 $",
+  "id":17,
+  "category":3,
+  "name":"Striped Tab-Sleeve Tops",
+  "part_number":17,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/thumbs/5a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/big/5a.jpg"
+  },
+  {
+  "price":"29.99 $",
+  "id":18,
+  "category":3,
+  "name":"Cuffed-Dolman Crepe Top",
+  "part_number":18,
+  "snapshot":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/thumbs/6a.jpg",
+  "large_image":"http://eshopdevel.test.oonair.net/public/imgs/prods/shirts/big/6a.jpg"
+  }
+  ]
