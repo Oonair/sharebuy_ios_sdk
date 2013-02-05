@@ -2,9 +2,31 @@
 
 This SDK enables you to easily add Chat, VideoCall and product sharing functionalities to your existing iOS app. For a more comprehensive guide of all the functionalities Share&Buy offers, please visit [Oonair's](http://oonair.com/) website.
 
-In order to install the SDK, first create an account and a Mobile App in our website, then follow the tutorial you will find there in order to install the SDK in your existing Xcode project.
-
 The SDK is written entirely using modern Objective-C technologies like GCD and ARC guaranteeing that your app won't see a performance hit when used and offers a block-based API in order to write more efficient and more readable controller code. 
+
+## Installing
+
+In order to install the SDK, first create an account and a Mobile App in our website, after this add the files inside the "ShareBuy" folder in your Xcode project.
+
+In order to be this awesome, the SDK relies in two very common iOS Libraries as  [SBJson](http://superloopy.io/json-framework/)  and the [Facebook iOS SDK v3.1](https://developers.facebook.com/docs/getting-started/facebook-sdk-for-ios/3.1/)  . Please follow the instructions in the linked websites to correctly install them.
+
+Also, add the following Apple frameworks in the 'Linked Frameworks and Libraries' section of the target's Summary pane
+
+* `AudioToolbox`
+* `AVFoundation`
+* `CoreMedia`
+* `CoreGraphics`
+* `CoreVideo`
+* `CFNetwork`
+* `libxml2`
+* `libz`
+* `libresolv`
+* `SystemConfiguration`
+
+And finally, add the following flag in 'Other Linker Flags' in your Target's 'Build Settings' pane:
+
+* `-ObjC`
+* `-lstdc++`
 
 # Basic functionality
 
