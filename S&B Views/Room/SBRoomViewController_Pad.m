@@ -138,7 +138,7 @@ typedef enum  TRoomViewState {
     [_callView addContact:contact videoEnabled:video];
 }
 
-- (void) callTerminated;
+- (void) callDidTerminate;
 {
     [self setCurrentCall:nil setViewStateAnimated:YES];
 }
@@ -175,7 +175,7 @@ typedef enum  TRoomViewState {
 
 - (void)presentAlertViewForError:(NSError *)error
 {
-    TSBCallError callError = [error code];
+    TSBCallErrorCode callError = [error code];
     NSString *callErrorMessage = nil;
     
     switch (callError) {

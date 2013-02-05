@@ -15,24 +15,36 @@
 #import "SBRequestProtocol.h"
 #endif
 
+/**
+ @class ShareBuy
+ 
+ @brief This class represents the main entry point to all ShareBuy functionality.
+ 
+ This class uses the singleton design pattern, use the sharedInstance method to get the instance.
+ 
+ Use this class to init the S&B stack with your Account and App ID, to 
+ login and logout from Facebook and get a representation of your friends, and
+ to start Chat Rooms with your friends.  
+ 
+ **/
+
 @class SBRoom;
 @class SBContact;
 @class SBFBContact;
-@class SBCall;
 
 /* The error domain of all error codes returned by S&B*/
 extern NSString *SBErrorDomain;
 
 /* This notification will be sent when S&B changes state. 
  A TShareBuyState value wrapped in a NSNumber will be passed*/
-extern NSString *SBStatus;
+extern NSString *SBStatusNotification;
 
 /* This notification will be sent when S&B Error occurs.
  A NSError object with a TShareBuyError code*/
-extern NSString *SBError;
+extern NSString *SBErrorNotification;
 
 /* This notification will be sent when the list of FB friends is updated*/
-extern NSString *SBFBFriendsUpdate;
+extern NSString *SBFBFriendsUpdateNotification;
 
 /* This notification will be sent when S&B receives an invitaion to a new room.
  A SBRoom will be passed*/
@@ -76,7 +88,8 @@ typedef enum  TShareBuyError {
 + (id) sharedInstance;
 
 /* Sets the Queue where the completion blocks will be called 
- and the NSNotifications will be sent. If not called, the Main Queue will be used. Stores a weak reference to the queue */
+ and the NSNotifications will be sent. If not called, the Main Queue will be used.
+ Stores a weak reference to the queue */
 - (void) setDelegateQueue:(dispatch_queue_t)queue;
 
 /* Start the Module with the given ClientID obtained from oonair.com*/
@@ -111,7 +124,7 @@ typedef enum  TShareBuyError {
 /* Logs out from FB*/
 - (void) logoutFacebook;
 
-/* Returns the list of FB friends of the user. Each friend will be a SBContact object*/
+/* Returns the list of FB friends of the user. Each friend will be a SBFBContact object*/
 - (NSArray *) getFacebookContactsSorted:(BOOL)sorted;
 
 - (SBFBContact *) userFacebookRepresentation;
@@ -119,32 +132,68 @@ typedef enum  TShareBuyError {
 /* If a Redirect URL suffix is set in this application, please provide it here*/
 - (void) setFacebookRedirectURLSuffix:(NSString *)suffix;
 
-/******S&B API******/
-
-/* Returns the list of S&B rooms of this user. Each room will be a SBRoom object*/
+// Returns an NSArray populated with the active rooms of this user. (SBRoom instances)
 - (NSArray *) getRooms;
 
-/* Creates a room with the given contact. Will use the FB-ID to process the invitation
- The completion block will be executed when the invitation has been sent*/
+/* Requests:
+ 
+ The following methods are used to trigger requests to S&B servers.
+ All of these methods are asynchronous methods
+ Completion blocks will be executed when the request is completed
+ They can be cancelled using the messages defined in @protocol(SBRequestProtocol)
+ */
+
+/**
+ * Creates a room with the given contact. Will use the FB-ID to process the invitation
+ *
+ * @param 'contact' A SBFBContact representing the contact to be invited
+ * @param 'completionBlock' Block to be executed when the invitation is sent.
+ * @block param 'response' An instance of SBContact representing the contact just invited
+ * @block param 'error' An instance of NSError representing the error generated
+ * @return A SBRoom representing the created Chat Room.
+ */
+
 - (SBRoom *) createRoomInviteUser:(SBFBContact *)contact
                   completionBlock:(SBRequestCompletionBlock)completionBlock;
 
-/* Creates a room with the given email
- The completion block will be executed when the invitation has been sent*/
+/**
+ * Creates a room with the given email. Will use email to process the invitation
+ *
+ * @param 'mail' A NSString representing the email of the contact to be invited
+ * @param 'completionBlock' Block to be executed when the invitation is sent.
+ * @block param 'response' An instance of SBContact representing the contact just invited
+ * @block param 'error' An instance of NSError representing the error generated
+ * @return A SBRoom representing the created Chat Room.
+ */
 - (SBRoom *) createRoomInviteUserWithMail:(NSString *)mail
                           completionBlock:(SBRequestCompletionBlock)completionBlock;
 
-/* Requests if there are available rooms with the given user. Will use the FB-ID to process the request
- The completion block will return the requested SBRoom */
+/**
+ * Requests if there are available rooms with the given user
+ *
+ * @param 'contact' A SBFBContact representing the contact to query the servers
+ * @param 'completionBlock' Block to be executed when the request is complete.
+ * @block param 'response' A NSArray with the SBRooms availables with this user
+ * @block param 'error' An instance of NSError representing the error generated
+ * @return A NSString representing the requestID of this action.
+ */
+
 - (NSString *) getRoomWithUser:(SBFBContact *)contact
                completionBlock:(SBRequestCompletionBlock)completionBlock;
 
-/* Requests if there are available rooms with the given mail
- The completion block will return the requested SBRoom */
+/**
+ * Requests if there are available rooms with the given email
+ *
+ * @param 'mail' A NSString representing the email of the contact to query the servers
+ * @param 'completionBlock' Block to be executed when the request is complete.
+ * @block param 'response' A NSArray with the SBRooms availables with this user
+ * @block param 'error' An instance of NSError representing the error generated
+ * @return A NSString representing the requestID of this action.
+ */
 - (NSString *) getRoomWithUserUserMail:(NSString *)mail
                        completionBlock:(SBRequestCompletionBlock)completionBlock;
 
-/* TEST PRODUCTION ENVRIOMENT*/
+/* TEST PRODUCTION ENVRIONMENT*/
 - (void) setTestEnvironment;
 
 @end

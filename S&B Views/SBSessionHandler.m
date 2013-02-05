@@ -59,12 +59,12 @@
     shareBuy = [ShareBuy sharedInstance];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(onSBStatus:)
-                                                 name:SBStatus
+                                                 name:SBStatusNotification
                                                object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(onSBError:)
-                                                 name:SBError
+                                                 name:SBErrorNotification
                                                object:nil];
 
     [shareBuy setTestEnvironment];

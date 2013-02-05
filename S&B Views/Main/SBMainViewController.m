@@ -66,7 +66,7 @@
 
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(onFBFriendsUpdate:)
-                                                     name:SBFBFriendsUpdate
+                                                     name:SBFBFriendsUpdateNotification
                                                    object:nil];
 
         shareBuy = [ShareBuy sharedInstance];

@@ -1,6 +1,5 @@
 //
-//  OonairInvitation.h
-//  OonairXmpp2
+//  SBInvitation
 //
 //  Created by Pierluigi Cifani on 10/25/12.
 //  Copyright (c) 2012 Oonair. All rights reserved.
