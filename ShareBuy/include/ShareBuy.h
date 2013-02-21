@@ -3,7 +3,7 @@
 //  SBSDK
 //
 //  Created by Pierluigi Cifani on 28/11/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -48,7 +48,11 @@ extern NSString *SBFBFriendsUpdateNotification;
 
 /* This notification will be sent when S&B receives an invitaion to a new room.
  A SBRoom will be passed*/
-extern NSString *SBInvitation;
+extern NSString *SBRoomInvitationNotification;
+
+/* This notification will be sent when S&B receives an external invitaion.
+ A SBInvitation will be passed*/
+extern NSString *SBInvitationNotification;
 
 /* States for the S&B singleton*/
 typedef enum  TShareBuyState{
@@ -167,6 +171,11 @@ typedef enum  TShareBuyError {
  */
 - (SBRoom *) createRoomInviteUserWithMail:(NSString *)mail
                           completionBlock:(SBRequestCompletionBlock)completionBlock;
+
+
+- (SBRoom *) joinRoom:(NSString *)roomName
+      invitationToken:(NSString *)invitationToken
+      completionBlock:(SBRequestCompletionBlock)completionBlock;
 
 /**
  * Requests if there are available rooms with the given user

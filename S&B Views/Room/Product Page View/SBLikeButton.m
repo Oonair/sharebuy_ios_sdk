@@ -8,6 +8,8 @@
 
 #import "SBLikeButton.h"
 #import "UIView+CenterInSuperView.h"
+#import "SBCustomizer.h"
+#import "UIButton+ActivityIndicator.h"
 
 #define kButtonWidth 40
 #define kButtonHeight 40
@@ -32,7 +34,7 @@
         //Set up custom title
         self.titleLabel.textColor = [UIColor whiteColor];
         self.titleLabel.backgroundColor = [UIColor clearColor];
-
+        self.titleLabel.font = [[SBCustomizer sharedCustomizer] defaultFont];
         //Set up State
         iButtonState = state;
         likeCount = aLikeCount;
@@ -64,7 +66,7 @@
                             forState:UIControlStateNormal];
             [self setBackgroundImage:[UIImage imageNamed:@"gr-like_on_bg-over"]
                             forState:UIControlStateHighlighted];
-            [self removeActivityIndicator];
+            [self stopActivityIndicator];
         }
             break;
             
@@ -74,18 +76,13 @@
                             forState:UIControlStateNormal];
             [self setBackgroundImage:[UIImage imageNamed:@"gr-like_off_bg-over"]
                             forState:UIControlStateHighlighted];
-            [self removeActivityIndicator];
+            [self stopActivityIndicator];
         }
             break;
 
         case ELikeWaiting:
         {
-            [self setImage:nil forState:UIControlStateNormal];
-            [self setImage:nil forState:UIControlStateHighlighted];
-            [self setTitle:nil forState:UIControlStateNormal];
-            [self setTitle:nil forState:UIControlStateHighlighted];
-            
-            [self addActivityIndicator];
+            [self startActivityIndicator];
         }
             break;
 
@@ -137,8 +134,8 @@
     iButtonState = state;
     likeCount = aNumber;
     
-    [self configureTitleAndImage];
     [self configureState];
+    [self configureTitleAndImage];
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event

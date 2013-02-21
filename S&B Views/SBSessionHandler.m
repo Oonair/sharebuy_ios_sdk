@@ -3,7 +3,7 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 12/10/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBSessionHandler.h"
@@ -13,10 +13,12 @@
 #import "SBRoomViewController.h"
 #import "SBRoomViewController_Pad.h"
 
+#import "SBWelcomeViewController.h"
 #import "SBConnectionViewController.h"
 #import "SBNavigationController.h"
+#import "SBBarButtonItem.h"
 
-#import "SBCurrentProductContainer.h"
+#import "SBProductContainer.h"
 
 #import "SBRemoteEventHandler.h"
 
@@ -24,6 +26,10 @@
 #import "ShareBuy.h"
 #import "SBRoom.h"
 
+#define kButtonImage [UIImage imageNamed:@"bt-launch"]
+
+NSString *SBViewDidAppear       = @"SBViewDidAppear";
+NSString *SBViewDidDisappear    = @"SBViewDidDisappear";
 
 @interface SBSessionHandler ()
 {
@@ -32,9 +38,9 @@
 }
 
 @property (nonatomic, strong) UIViewController *currentViewController;
-@property (nonatomic, strong) UINavigationController *currentNavigationController;
+@property (nonatomic, strong) SBNavigationController *currentNavigationController;
 
-@property (nonatomic, strong) UIBarButtonItem *button;
+@property (nonatomic, strong) SBBarButtonItem *button;
 
 @property (nonatomic, weak) id <SBViewContainerProtocol> delegate;
 
@@ -66,21 +72,27 @@
                                              selector:@selector(onSBError:)
                                                  name:SBErrorNotification
                                                object:nil];
-
+#ifdef DEBUG
     [shareBuy setTestEnvironment];
-
+#endif
+    
     [shareBuy startWithAccountID:accountID
                      mobileAppID:mobileAppID];
     
     //Create Button
-    self.button = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"bt-launch"]
-                                                    style:UIBarButtonItemStylePlain
-                                                   target:self
-                                                   action:@selector(onButtonTapped)];
+    self.button = [SBBarButtonItem buttonWithTarget:self
+                                             action:@selector(onButtonTapped)
+                                              image:kButtonImage];
 
-    //Start this just so they can hear notifications
-    [SBCurrentProductContainer sharedContainer];
+    //Start the other modules
+    [SBProductContainer sharedContainer];
     [[SBRemoteEventHandler sharedHandler] setRoomNavigationDelegate:self];
+    [[SBRemoteEventHandler sharedHandler] setViewProviderDelegate:self];
+    
+    //Clear notifications from Notification center
+    [[UIApplication sharedApplication] setApplicationIconBadgeNumber:1];
+    [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
+    [[UIApplication sharedApplication] cancelAllLocalNotifications];
 }
 
 #pragma mark API
@@ -115,14 +127,7 @@
 
 - (SBRoom *) currentRoom;
 {
-    UIViewController *topViewController = [_currentNavigationController topViewController];
-    if ([topViewController isKindOfClass:[SBRoomViewController class]])
-    {
-        SBRoomViewController *roomViewController = (SBRoomViewController *) topViewController;
-        return roomViewController.room;
-    }
-    
-    return nil;
+    return [self.currentNavigationController currentRoom];
 }
 
 - (SBRoomViewController *) navigateToRoom:(SBRoom *)desideredRoom;
@@ -161,14 +166,25 @@
 
 #pragma mark SBViewProviderProtocol
 
-- (UIBarButtonItem *) getShareBuyButton;
-{    
+- (SBBarButtonItem *) getShareBuyButton;
+{
     return _button;
 }
 
 - (UIViewController *) getShareBuyViewController;
 {
     return _currentNavigationController;
+}
+
+- (void) shareBuyDidAppear;
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:SBViewDidAppear
+                                                        object:nil];
+}
+- (void) shareBuyDidDisappear;
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:SBViewDidDisappear
+                                                        object:nil];
 }
 
 #pragma mark SB Notifications
@@ -220,7 +236,7 @@
             
         case ESBStateWaitingFBLogin:
         {
-            [self createConnectionViewWithState:EStateConnectToFacebook];
+            [self createWelcomeView];
         }
             break;
             
@@ -275,6 +291,17 @@
     SBNavigationController *navController = [[SBNavigationController alloc] initWithRootViewController:mainController];
    
     self.currentViewController = mainController;
+    self.currentNavigationController = navController;
+    
+    [self setViewControllerInContainer:navController];
+}
+
+- (void) createWelcomeView
+{
+    SBWelcomeViewController *welcome = [[SBWelcomeViewController alloc] init];
+    SBNavigationController *navController = [[SBNavigationController alloc] initWithRootViewController:welcome];
+    
+    self.currentViewController = welcome;
     self.currentNavigationController = navController;
     
     [self setViewControllerInContainer:navController];

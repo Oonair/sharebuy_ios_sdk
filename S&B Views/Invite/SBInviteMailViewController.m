@@ -3,16 +3,17 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 1/14/13.
-//  Copyright (c) 2013 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBInviteMailViewController.h"
 #import "SBFBContact.h"
 #import "SBInviteAddressBookViewController.h"
+#import "SBCustomizer.h"
 
 @interface SBInviteMailViewController ()
-@property (strong, nonatomic) IBOutlet UITextField *userNameTextField;
-@property (strong, nonatomic) IBOutlet UITextField *userMailTextField;
+@property (strong, nonatomic) IBOutlet UILabel *userNameLabel;
+@property (strong, nonatomic) IBOutlet UILabel *userMailLabel;
 @property (strong, nonatomic) IBOutlet UITextField *friendMailTextField;
 @property (strong, nonatomic) IBOutlet UIButton *addressBookButton;
 @property (strong, nonatomic) SBFBContact *user;
@@ -58,6 +59,8 @@
     [self.friendMailTextField becomeFirstResponder];
     
     self.title = @"Invite by Mail";
+    
+    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"bg-diagonalines"]];
 }
 
 - (void)didReceiveMemoryWarning
@@ -67,8 +70,8 @@
 }
 
 - (void)viewDidUnload {
-    [self setUserNameTextField:nil];
-    [self setUserMailTextField:nil];
+    [self setUserNameLabel:nil];
+    [self setUserMailLabel:nil];
     [self setFriendMailTextField:nil];
     [self setAddressBookButton:nil];
     [super viewDidUnload];
@@ -78,31 +81,23 @@
 
 - (void)configureLeftBarButton
 {
-    UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithTitle:@"Cancel"
-                                                                    style:UIBarButtonItemStylePlain
-                                                                   target:self
-                                                                   action:@selector(onCancelPressed:)];
-    
+    UIBarButtonItem *cancelButton = [[SBCustomizer sharedCustomizer] barButtonWithTitle:@"Cancel"
+                                                                            target:self
+                                                                            action:@selector(onCancelPressed:)];
+
     [self.navigationItem setLeftBarButtonItem:cancelButton];
 }
 
 - (void)configureRightBarButton
-{
-    UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithTitle:@"Done"
-                                                                    style:UIBarButtonItemStylePlain
-                                                                   target:self
-                                                                   action:@selector(onDonePressed:)];
-    
-    [self.navigationItem setRightBarButtonItem:doneButton];
+{        
+    UIBarButtonItem *barButton = [[SBCustomizer sharedCustomizer] doneBarButtonWithTitle:@"Done" target:self action:@selector(onDonePressed:)];
+    [self.navigationItem setRightBarButtonItem:barButton];
 }
 
 - (void)configureTextFieldsWithUserInfo
 {
-    self.userNameTextField.text = [self.user getFullName];
-    self.userMailTextField.text = [self.user getMail];
-    
-    self.userNameTextField.enabled = NO;
-    self.userMailTextField.enabled = NO;
+    self.userNameLabel.text = [self.user getFullName];
+    self.userMailLabel.text = [self.user getMail];
 }
 
 - (void)setRightBarButtonEnabled
@@ -181,7 +176,11 @@
 
 - (void) presentErrorForWrongMailFormat
 {
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"ERROR" message:@"Please insert a valid email address" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"ERROR"
+                                                    message:@"Please insert a valid email address"
+                                                   delegate:nil
+                                          cancelButtonTitle:@"OK"
+                                          otherButtonTitles:nil];
     [alert show];
 }
 

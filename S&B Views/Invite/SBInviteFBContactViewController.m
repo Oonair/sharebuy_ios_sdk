@@ -3,7 +3,7 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 1/14/13.
-//  Copyright (c) 2013 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBInviteFBContactViewController.h"
@@ -11,6 +11,7 @@
 #import "SBFBContact.h"
 #import "SBInviteMailViewController.h"
 
+#import "SBCustomizer.h"
 #import "ShareBuy.h"
 
 #define kAddMailCellHeight 44
@@ -66,7 +67,7 @@ typedef enum {
     [self.tableView registerNib:contactNib
          forCellReuseIdentifier:@"SBFBContactCell"];
     
-    self.title = @"Invite Friend";
+    self.title = @"Invite";
 }
 
 - (void)didReceiveMemoryWarning
@@ -122,20 +123,19 @@ typedef enum {
     self.modeIndicatorImageView.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
     self.modeIndicatorImageView.contentMode = UIViewContentModeCenter;
     CGRect frame = self.view.frame;
-    [self.view insertSubview:self.modeIndicatorImageView belowSubview:self.allButton];
+    [self.view insertSubview:self.modeIndicatorImageView
+                belowSubview:self.allButton];
     self.modeIndicatorImageView.center = CGPointMake(self.allButton.center.x,
                                                      frame.size.height-44 + self.modeIndicatorImageView.frame.size.height/2);
 }
 
 - (void) configureRightBarButton
 {
-    if (self.navigationItem.rightBarButtonItem == nil) {
-        UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithTitle:@"Done"
-                                                                        style:UIBarButtonItemStylePlain
-                                                                       target:self
-                                                                       action:@selector(onDonePressed:)];
-        
-        [self.navigationItem setRightBarButtonItem:doneButton];
+    if (self.navigationItem.rightBarButtonItem == nil)
+    {
+        UIBarButtonItem *barButton = [[SBCustomizer sharedCustomizer] doneBarButtonWithTitle:@"Done" target:self action:@selector(onDonePressed:)];
+
+        [self.navigationItem setRightBarButtonItem:barButton];
     }
     
     if ([self.selectedContacts count] == NO) {
@@ -289,11 +289,12 @@ typedef enum {
 {
     [self.navigationController dismissViewControllerAnimated:YES
                                                   completion:^{
-                                                      if (contacts) {
-                                                          [self.delegate invitedMailContact:contacts];
-                                                          [self popViewControllerAnimated:YES];
-                                                      }
                                                   }];
+    
+    if (contacts) {
+        [self.delegate invitedMailContact:contacts];
+        [self popViewControllerAnimated:NO];
+    }
 }
 
 #pragma mark Private
@@ -326,16 +327,12 @@ typedef enum {
 - (void) createInviteByMailViewController
 {
     SBInviteMailViewController *mailInvite = [[SBInviteMailViewController alloc] initWithDelegate:self userInfo:[[ShareBuy sharedInstance] userFacebookRepresentation]];
-    UINavigationController *navController = [[UINavigationController alloc] initWithRootViewController:mailInvite];
+    
+    UINavigationController *navController = [[SBCustomizer sharedCustomizer] navigationControllerWithRootViewController:mailInvite];
     
     [self.navigationController presentViewController:navController
                                             animated:YES
-                                          completion:^{
-    
-                                              NSLog(@"presentViewController:");
-    
-                                          }];
-    
+                                          completion:nil];
 }
 
 - (UITableViewCell *) getCellForContact:(SBFBContact *)contact
@@ -367,7 +364,7 @@ typedef enum {
     
     //And the thumbnail
     UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(15, 10, 20, 20)];
-    imageView.image = [UIImage imageNamed:@"ic-mail"];
+    imageView.image = [UIImage imageNamed:@"ic-mail-cell"];
     
     //And the label
     UILabel *aLabel = [[UILabel alloc] initWithFrame:CGRectMake(45, 5, self.tableView.frame.size.width, 30)];

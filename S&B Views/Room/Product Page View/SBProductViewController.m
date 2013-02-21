@@ -3,12 +3,13 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 1/2/13.
-//  Copyright (c) 2013 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBProductViewController.h"
 
 #import "SBProductView.h"
+#import "SBViewProtocols.h"
 
 @interface SBProductViewController ()
 
@@ -43,11 +44,13 @@
 {
     if (product == nil) return;
     
+    CGRect rightProductRect = CGRectMake(0, 0,
+                                         self.rightProductViewContainer.frame.size.width,
+                                         self.rightProductViewContainer.frame.size.height);
+    
     self.rightProduct = product;
 
-    self.rightProductView = [[SBProductView alloc] initWithFrame:CGRectMake(0, 0,
-                                                                             self.rightProductViewContainer.frame.size.width,
-                                                                             self.rightProductViewContainer.frame.size.height)
+    self.rightProductView = [[SBProductView alloc] initWithFrame:rightProductRect
                                                        andProduct:self.rightProduct
                                                          delegate:self.delegate
                                                              mode:mode];
@@ -58,13 +61,15 @@
 - (void) setLeftProduct:(SBProduct *)product mode:(TProductViewMode)mode;
 {
     if (product == nil) return;
-        
+    
+    CGRect leftProductRect = CGRectMake(0, 0,
+                                        self.leftProductViewContainer.frame.size.width,
+                                        self.leftProductViewContainer.frame.size.height);
+    
     self.leftProduct = product;
     
-    self.leftProductView = [[SBProductView alloc] initWithFrame:CGRectMake(0, 0,
-                                                                            self.leftProductViewContainer.frame.size.width,
-                                                                            self.leftProductViewContainer.frame.size.height)
-                                                      andProduct:self.leftProduct
+    self.leftProductView = [[SBProductView alloc] initWithFrame:leftProductRect
+                                                     andProduct:self.leftProduct
                                                         delegate:self.delegate
                                                             mode:mode];
 
@@ -80,6 +85,27 @@
 - (void) viewDidLoad
 {
     [super viewDidLoad];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(onPanelOpen)
+                                                 name:SBViewDidAppear
+                                               object:nil];
+}
+
+- (void) dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void) viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+}
+
+- (void)onPanelOpen
+{
+    [self.leftProductView wigglePlusButton];
+    [self.rightProductView wigglePlusButton];
 }
 
 @end

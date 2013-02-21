@@ -3,16 +3,18 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 28/11/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "AppDelegate.h"
 
 // Shop Module
-#import "ProductGridViewController.h"
+#import "ProductCategoriesViewController.h"
+#import "ProductCategoriesViewController_Pad.h"
 
 // S&B Module
 #import "SBSessionHandler.h"
+#import "SBCustomizer.h"
 
 // Vendor
 #import "IIViewDeckController.h" //Component available at: https://github.com/piercifani/ViewDeck
@@ -37,7 +39,7 @@
 
     self.window.rootViewController = [self setUpViews];
     [self.window makeKeyAndVisible];
-        
+    
     return YES;
 }
 
@@ -95,19 +97,144 @@
     return YES;
 }
 
+- (void)viewDeckControllerDidOpenRightView:(IIViewDeckController*)viewDeckController animated:(BOOL)animated;
+{
+    //Block interaction on the Center view so user doesn't produce un-intended touches
+    UINavigationController *centerController = (UINavigationController *) self.viewDeck.centerController;
+    centerController.topViewController.view.userInteractionEnabled = NO;
+    
+    [self.shareBuyHandler shareBuyDidAppear];
+}
+
+- (void)viewDeckControllerDidCloseRightView:(IIViewDeckController*)viewDeckController animated:(BOOL)animated;
+{
+    //Reenable interaction on the Center view so user can use this view
+    UINavigationController *centerController = (UINavigationController *) self.viewDeck.centerController;
+    centerController.topViewController.view.userInteractionEnabled = YES;
+    
+    [self.shareBuyHandler shareBuyDidDisappear];
+}
+
 #pragma mark Internal
+
+- (void) customizeShareBuy
+{
+    // First, Navigation bars
+    UIImage *navBarImage = [[UIImage imageNamed:@"bg-navigation-big"]
+                            resizableImageWithCapInsets:UIEdgeInsetsMake(0, 0, 3, 0)];
+    
+    UIImage *navBarImageSmall = [[UIImage imageNamed:@"bg-navigation-small"]
+                            resizableImageWithCapInsets:UIEdgeInsetsMake(0, 0, 3, 0)];
+
+    SBCustomizer *customizer = [SBCustomizer sharedCustomizer];
+    
+    [customizer setNavigationBarBackgroundImage:navBarImage];
+    
+    [customizer setNavigationBarBackgroundImageLandscapePhone:navBarImageSmall];
+
+    // Second, BackButtons
+    UIImage *buttonBack = [[UIImage imageNamed:@"bt-back"]
+                             resizableImageWithCapInsets:UIEdgeInsetsMake(0, 13, 0, 5)];
+    
+    UIImage *buttonBackHigh = [[UIImage imageNamed:@"bt-back-high"]
+                               resizableImageWithCapInsets:UIEdgeInsetsMake(0, 13, 0, 5)];
+
+    [customizer setBarButtonBackImage:buttonBack];
+    
+    [customizer setBarBackButtonHighlightedImage:buttonBackHigh];
+
+    // Third, BarButtons
+    UIImage *barButton = [[UIImage imageNamed:@"bt-round"]
+                           resizableImageWithCapInsets:UIEdgeInsetsMake(0, 5, 0, 5)];
+    
+    UIImage *barButtonHigh = [[UIImage imageNamed:@"bt-round-over"]
+                               resizableImageWithCapInsets:UIEdgeInsetsMake(0, 5, 0, 5)];
+    
+    [customizer setBarButtonImage:barButton];
+    [customizer setBarButtonHighlightedImage:barButtonHigh];
+    
+    
+    UIImage *barDoneButton = [[UIImage imageNamed:@"bt-facebook"] resizableImageWithCapInsets:UIEdgeInsetsMake(17, 5, 17, 5)];
+    
+    UIImage *barDoneButtonHigh = [[UIImage imageNamed:@"bt-facebook-over"] resizableImageWithCapInsets:UIEdgeInsetsMake(17, 5, 17, 5)];
+    
+    [customizer setBarButtonDoneImage:barDoneButton];
+    [customizer setBarButtonDoneHighlightedImage:barDoneButtonHigh];
+
+    
+    // Fourth, tableHeader
+    [customizer setTableHeaderColor:[UIColor colorWithRed:157/255.0
+                                                    green:165/255.0
+                                                     blue:162/255.0
+                                                    alpha:1]];
+}
 
 - (void) setUpShareBuy
 {
+    [self customizeShareBuy];
+    
     self.shareBuyHandler = [SBSessionHandler sharedHandler];
     [self.shareBuyHandler setViewContainerDelegate:self];
 
+#ifdef DEBUG
     [self.shareBuyHandler startWithAccountID:@"upo2w2h2laas"
                                  mobileAppID:@"q1opwe"];
+#else
+    [self.shareBuyHandler startWithAccountID:@"b69rbqhkfu6c"
+                                 mobileAppID:@"m5uOco"];
+#endif
+}
+
+- (void) customizeElements
+{    
+    UIImage *gradientImage44 = [[SBCustomizer sharedCustomizer] navigationBarBackgroundImage];
+    
+    UIImage *gradientImage32 = [[SBCustomizer sharedCustomizer] navigationBarBackgroundImageLandscapePhone];
+
+    UIImage *barButton = [[SBCustomizer sharedCustomizer] barButtonImage];
+    
+    UIImage *barButtonHigh = [[SBCustomizer sharedCustomizer] barButtonHighlightedImage];
+    
+    UIImage *backButton = [[SBCustomizer sharedCustomizer] barButtonBackImage];
+
+    UIImage *backButtonHigh = [[SBCustomizer sharedCustomizer] barBackButtonHighlightedImage];
+
+    [[UINavigationBar appearance] setBackgroundImage:gradientImage44
+                                       forBarMetrics:UIBarMetricsDefault];
+    
+    [[UINavigationBar appearance] setBackgroundImage:gradientImage32
+                                       forBarMetrics:UIBarMetricsLandscapePhone];
+
+    [[UIBarButtonItem appearance] setBackgroundImage:barButton
+                                            forState:UIControlStateNormal
+                                          barMetrics:UIBarMetricsDefault];
+    
+    [[UIBarButtonItem appearance] setBackgroundImage:barButtonHigh
+                                            forState:UIControlStateHighlighted
+                                          barMetrics:UIBarMetricsDefault];
+
+    [[UIBarButtonItem appearance] setBackButtonBackgroundImage:backButton
+                                                      forState:UIControlStateNormal
+                                                    barMetrics:UIBarMetricsDefault];
+    
+    [[UIBarButtonItem appearance] setBackButtonBackgroundImage:backButtonHigh
+                                                      forState:UIControlStateHighlighted
+                                                    barMetrics:UIBarMetricsDefault];
+    
+    //Customize UINavigationBar
+    [[UINavigationBar appearance] setTitleTextAttributes:
+     [NSDictionary dictionaryWithObjectsAndKeys:
+      [UIColor whiteColor],
+      UITextAttributeTextColor,
+      [UIColor clearColor],
+      UITextAttributeTextShadowColor,
+      nil]];
 }
 
 - (UIViewController *) setUpViews
 {
+    [self customizeElements];
+    
     if (INTERFACE_IS_PHONE) {
         return [self setUpViewsPhone];
     } else {
@@ -118,8 +245,11 @@
 - (UIViewController *) setUpViewsPad
 {
     UINavigationController *storeNavigation = [self createProductGrid];
-    
+
     self.popoverController = [[UIPopoverController alloc] initWithContentViewController:[self.shareBuyHandler getShareBuyViewController]];
+    _popoverController.popoverBackgroundViewClass = [SBPopoverBackgroundView class];
+
+    
     [self.popoverController setPassthroughViews:@[storeNavigation.view]];
     return storeNavigation;
 }
@@ -127,7 +257,7 @@
 - (UIViewController *) setUpViewsPhone
 {
     UINavigationController *storeNavigation = [self createProductGrid];
-    
+
     UIViewController *shareBuyVC = [self.shareBuyHandler getShareBuyViewController];
     IIViewDeckController *deckController =  [[IIViewDeckController alloc] initWithCenterViewController:storeNavigation
                                                                                     rightViewController:shareBuyVC];
@@ -142,7 +272,16 @@
 
 - (UINavigationController *)createProductGrid
 {
-    UIViewController *productGrid = [[ProductGridViewController alloc] init];
+    UIViewController *productGrid;
+    if (INTERFACE_IS_PHONE)
+    {
+        productGrid = [[ProductCategoriesViewController alloc] init];
+    }
+    else
+    {
+        productGrid = [[ProductCategoriesViewController_Pad alloc] init];
+    }
+    
     UINavigationController *storeNavigation = [[UINavigationController alloc] initWithRootViewController:productGrid];
     return storeNavigation;
 }
@@ -159,6 +298,8 @@
         [self.popoverController presentPopoverFromBarButtonItem:[self.shareBuyHandler getShareBuyButton]
                                        permittedArrowDirections:UIPopoverArrowDirectionUp
                                                        animated:YES];
+        
+        [self.shareBuyHandler shareBuyDidAppear];
     }
 }
 - (void) hideShareBuy;
@@ -169,6 +310,8 @@
     } else
     {
         [self.popoverController dismissPopoverAnimated:YES];
+        
+        [self.shareBuyHandler shareBuyDidDisappear];
     }
 }
 

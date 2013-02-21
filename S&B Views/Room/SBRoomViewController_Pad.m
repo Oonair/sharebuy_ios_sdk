@@ -3,26 +3,36 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 1/16/13.
-//  Copyright (c) 2013 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBRoomViewController_Pad.h"
 #import "SBRoomViewController_Private.h"
 
 #import "SBRoomCallView.h"
+#import "UIButton+ActivityIndicator.h"
 
-#define kVideoHeight 100.0f
+#define kVideoHeight        100.0f
+#define kChatTableInset     UIEdgeInsetsMake(100, 0, 0, 0)
+#define kChatTableNoInset   UIEdgeInsetsMake(0, 0, 0, 0)
 
 typedef enum  TRoomViewState {
     ECallIdle = 0,
     ECallOngoing
 } TRoomViewState;
 
+typedef enum  TChatViewState {
+    EChatNormal = 0,
+    EChatSmall
+} TChatViewState;
+
 @interface SBRoomViewController_Pad () <SBCallObserverProtocol>
 {
     BOOL streamingAudio;
     BOOL streamingVideo;
     TRoomViewState viewState;
+    TChatViewState chatState;
+    UIInterfaceOrientation currentInterfaceOrientation;
 }
 
 @property (nonatomic, strong) SBCall *call;
@@ -40,8 +50,15 @@ typedef enum  TRoomViewState {
         // Custom initialization
         self.room = room;
         self.userID = userID;
+        
+        [self.room enterRoom];
     }
     return self;
+}
+
+- (void) dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)viewDidLoad
@@ -53,6 +70,23 @@ typedef enum  TRoomViewState {
     
     SBCall *currentCall = [self.room currentCall];
     [self setCurrentCall:currentCall setViewStateAnimated:NO];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardDidShow:)
+                                                 name:UIKeyboardDidShowNotification
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardDidHide:)
+                                                 name:UIKeyboardDidHideNotification
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(orientationChanged)
+                                                 name:UIDeviceOrientationDidChangeNotification
+                                               object:nil];
+
+    currentInterfaceOrientation = [UIApplication sharedApplication].statusBarOrientation;
 }
 
 - (void)didReceiveMemoryWarning
@@ -70,6 +104,111 @@ typedef enum  TRoomViewState {
     [self setToggleCameraButton:nil];
     [self setVideoView:nil];
     [super viewDidUnload];
+}
+
+#pragma mark - Keyboard
+
+// The way this is handled is a fucking shame. However, Since I have NO IDEA on how AutoLayout works,
+// this is the best I could do... :(
+
+- (void)orientationChanged
+{
+    UIInterfaceOrientation newOrientation = [UIApplication sharedApplication].statusBarOrientation;
+    
+    if (self.keyboardState == EKeyboardShown)
+    {
+        if (UIInterfaceOrientationIsPortrait(currentInterfaceOrientation) && UIInterfaceOrientationIsLandscape(newOrientation)) {
+
+            double delayInSeconds = 0.6;
+            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+            dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+                [self setSmallChatMode:NO];
+            });
+
+        } else if (UIInterfaceOrientationIsLandscape(currentInterfaceOrientation) && UIInterfaceOrientationIsPortrait(newOrientation))
+        {
+            double delayInSeconds = 0.6;
+            dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+            dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+                [self setNormalChatMode:NO];
+            });
+        }
+    }
+    
+    currentInterfaceOrientation = newOrientation;
+}
+
+-(void)keyboardDidShow:(NSNotification *)aNotification
+{
+    self.keyboardState = EKeyboardShown;
+    
+    if (UIInterfaceOrientationIsLandscape([UIApplication sharedApplication].statusBarOrientation)) {
+        [self setSmallChatMode:YES];
+    }
+}
+
+-(void)keyboardDidHide:(NSNotification *)aNotification
+{
+    self.keyboardState = EKeyboardHidden;
+    
+    if (chatState == EChatSmall) {
+
+        double delayInSeconds = 0.1;
+        dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+        dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+            
+            [self setNormalChatMode:YES];
+
+        });
+    }
+}
+
+- (void) setNormalChatMode:(BOOL)animated
+{
+    void(^resizing)(void) = ^(void) {
+        [self.chatTable setContentInset:kChatTableNoInset];
+        [self.chatTable scrollChatTableToTheBottom:animated];
+        chatState = EChatNormal;
+    };
+    
+    if (animated)
+    {
+        [UIView animateWithDuration:0.2
+                         animations:resizing];
+    } else
+    {
+        resizing();
+    }
+}
+
+- (void) setSmallChatMode:(BOOL)animated
+{
+    if (viewState == ECallOngoing)
+        return;
+    
+    void(^resizing)(void) = ^(void) {
+        [self.chatTable setContentInset:kChatTableInset];
+        [self.chatTable scrollChatTableToTheBottom:animated];
+        chatState = EChatSmall;
+    };
+
+    if (animated)
+    {
+        [UIView animateWithDuration:0.2
+                         animations:resizing];
+    } else
+    {
+        resizing();
+    }
+
+}
+
+#pragma mark S&B Notifications
+
+- (void)onSBRoomStatus:(NSNotification *)notification
+{
+    [super onSBRoomStatus:notification];
+    [self customizeButtons];
 }
 
 #pragma mark API
@@ -101,18 +240,25 @@ typedef enum  TRoomViewState {
     [_call hangCall];
 }
 
+
 - (IBAction)onStartCall:(id)sender
-{    
+{
+    __weak typeof(self) weakSelf = self;
+
+    [self.startCallButton startActivityIndicator];
+    
     [self.room startCallWithVideoEnabled:YES
                             audioEnabled:YES
                          completionBlock:^(id response, NSError *error){
                              
                              if (error) {
-                                 [self presentAlertViewForError:error];
+                                 [weakSelf presentAlertViewForError:error];
                                  return;
                              }
                              
-                             [self setCurrentCall:response setViewStateAnimated:YES];
+                             [weakSelf.startCallButton stopActivityIndicator];
+                             
+                             [weakSelf setCurrentCall:response setViewStateAnimated:YES];
                          }];
 }
 
@@ -126,6 +272,9 @@ typedef enum  TRoomViewState {
 - (void) contactHasLeftCall:(SBContact *)contact withReason:(TRejectReason)reason
 {
     NSLog(@"contactHasLeftCall %@", contact);
+    
+    [self presentAlertViewForUserLeft:contact reason:reason];
+
     [_callView removeContact:contact];
 }
 
@@ -215,6 +364,50 @@ typedef enum  TRoomViewState {
     [alertView show];
 }
 
+- (void)presentAlertViewForUserLeft:(SBContact *)contact reason:(TRejectReason)reason
+{
+    NSString *message;
+    
+    switch (reason) {
+        case EReasonFeatureNotSupported:
+            message = [NSString stringWithFormat:@"%@'s device doesn't support calls", contact.firstName];
+            break;
+            
+        case EReasonTransportNotAllowed:
+            message = [NSString stringWithFormat:@"%@'s network doesn't support calls", contact.firstName];
+            break;
+            
+        case EReasonBusy:
+            message = [NSString stringWithFormat:@"%@ is busy in another call", contact.firstName];
+            break;
+            
+        case EReasonUserReject:
+            message = [NSString stringWithFormat:@"%@ rejected the call", contact.firstName];
+            break;
+            
+        case EReasonUserTimeout:
+            message = [NSString stringWithFormat:@"%@ didn't answer", contact.firstName];
+            break;
+            
+        case EReasonConnectTimeout:
+            message = [NSString stringWithFormat:@"%@ couldn't connect", contact.firstName];
+            break;
+            
+        default:
+            break;
+    }
+    
+    if (message)
+    {
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Call Info"
+                                                            message:message
+                                                           delegate:nil
+                                                  cancelButtonTitle:@"Dismiss"
+                                                  otherButtonTitles:nil];
+        [alertView show];
+    }
+}
+
 - (void) setupCallView
 {
     if (_callView == nil)
@@ -295,6 +488,11 @@ typedef enum  TRoomViewState {
         
         [self setupCallView];
         
+        if (self.keyboardState == EKeyboardShown)
+        {
+            [self setNormalChatMode:animated];
+        }
+        
         videoAlpha = 1.0f;
     } else
     {
@@ -313,6 +511,10 @@ typedef enum  TRoomViewState {
                                  chatRect.size.width,
                                  chatRect.size.height + kVideoHeight);
         [self removeCallView];
+        if (self.keyboardState == EKeyboardShown)
+        {
+            [self setSmallChatMode:animated];
+        }
     }
     
     void (^setItems)(void) = ^(void) {
@@ -338,10 +540,10 @@ typedef enum  TRoomViewState {
         [UIView animateWithDuration:1.0
                               delay:0.1
                             options: UIViewAnimationCurveEaseOut
-                         animations:^{setItems();}
-                         completion:^(BOOL finished){
-
-                         }];
+                         animations:^{
+                             setItems();
+                         }
+                         completion:nil];
     } else {
         setItems();
     }
@@ -350,13 +552,20 @@ typedef enum  TRoomViewState {
 - (void) customizeButtons
 {
     //Start Video Call button
-    [_startCallButton setBackgroundImage:[[UIImage imageNamed:@"bt-start-videocall" ] resizableImageWithCapInsets:UIEdgeInsetsMake(6.0, 5.0, 6.0, 5.0)]
-                            forState:UIControlStateNormal];
-    [_startCallButton setBackgroundImage:[[UIImage imageNamed:@"bt-start-videocall-disabled" ] resizableImageWithCapInsets:UIEdgeInsetsMake(6.0, 5.0, 6.0, 5.0)]
-                            forState:UIControlStateDisabled];
-    [_startCallButton setBackgroundImage:[[UIImage imageNamed:@"bt-start-videocall-over"] resizableImageWithCapInsets:UIEdgeInsetsMake(6.0, 5.0, 6.0, 5.0)]
-                            forState:UIControlStateHighlighted];
+    UIImage *greenButton = [[UIImage imageNamed:@"bt-videocall-start"] resizableImageWithCapInsets:UIEdgeInsetsMake(17, 5, 17, 5)];
+    UIImage *greenButtonHighlighted = [[UIImage imageNamed:@"bt-videocall-start-over" ] resizableImageWithCapInsets:UIEdgeInsetsMake(17, 5, 17, 5)];
 
+    UIImage *redButton = [[UIImage imageNamed:@"bt-videocall-end"] resizableImageWithCapInsets:UIEdgeInsetsMake(17, 5, 17, 5)];
+    UIImage *redButtonHighlighted = [[UIImage imageNamed:@"bt-videocall-end-over" ] resizableImageWithCapInsets:UIEdgeInsetsMake(17, 5, 17, 5)];
+
+    [_startCallButton setEnabled:([self.room getRoomState] == ERoomStateReady)];
+
+    [_startCallButton setBackgroundImage:greenButton
+                                forState:UIControlStateNormal];
+    
+    [_startCallButton setBackgroundImage:greenButtonHighlighted
+                            forState:UIControlStateHighlighted];
+    
     [_startCallButton setImage:[UIImage imageNamed:@"ic-start-videocall"]
                       forState:UIControlStateNormal];
 
@@ -368,11 +577,10 @@ typedef enum  TRoomViewState {
     [_startCallButton setImageEdgeInsets:UIEdgeInsetsMake(0, 0, 0, 5.0)];
 
     //End Call button
-    [_endCallButton setBackgroundImage:[[UIImage imageNamed:@"bt-endcall" ] resizableImageWithCapInsets:UIEdgeInsetsMake(6.0, 5.0, 6.0, 5.0)]
-                             forState:UIControlStateNormal];
-    [_endCallButton setBackgroundImage:[[UIImage imageNamed:@"bt-endcall" ] resizableImageWithCapInsets:UIEdgeInsetsMake(6.0, 5.0, 6.0, 5.0)]
-                             forState:UIControlStateDisabled];
-    [_endCallButton setBackgroundImage:[[UIImage imageNamed:@"bt-endcall-over"] resizableImageWithCapInsets:UIEdgeInsetsMake(6.0, 5.0, 6.0, 5.0)]
+    [_endCallButton setBackgroundImage:redButton
+                              forState:UIControlStateNormal];
+
+    [_endCallButton setBackgroundImage:redButtonHighlighted
                              forState:UIControlStateHighlighted];
 
     [_endCallButton setImage:[UIImage imageNamed:@"ic-endcall"]

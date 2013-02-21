@@ -24,8 +24,6 @@ typedef enum _NSBubbleType
 
 
 @interface UIBubbleTableViewCell : UITableViewCell
-{
-}
 
 - (void) configureForMessage:(NSString *)aMessage
                   bubbleSize:(CGSize)aBubbleSize
@@ -36,7 +34,11 @@ typedef enum _NSBubbleType
 
 -(void) setWidth:(NSInteger)aWidth;
 -(void) setCustomBubbleFont:(UIFont *)aFont;
--(void) setBubbleImageMine:(UIImage *)mine someoneElse:(UIImage *)someoneelse;
+-(void) setCustomBubbleColorMine:(UIColor *)colorMine
+                      colorOther:(UIColor *)colorOther;
+
+-(void) setBubbleImageMine:(UIImage *)mine
+               someoneElse:(UIImage *)someoneelse;
 
 @property (strong, nonatomic) IBOutlet UILabel *headerLabel;
 @property (strong, nonatomic) IBOutlet UIImageView *avatarImage;

@@ -3,7 +3,7 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 12/17/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBProductView.h"
@@ -12,6 +12,7 @@
 
 #import "SDWebImageManager.h"
 #import "UIView+CenterInSuperView.h"
+#import "UIView+Wiggle.h"
 
 #import "SBLikeButton.h"
 
@@ -46,17 +47,12 @@
     if (self) {
         // Initialization code
         self.delegate = delegate;
-        self.product = product;
         self.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
-        
+        [self updateProduct:product];
+
         [self initialize];
         [self setViewMode:aMode];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(onSBProductUpdate)
-                                                     name:SBProductUpdateNotification
-                                                   object:self.product];
     }
     return self;
 }
@@ -68,12 +64,13 @@
     self.delegate = nil;
     
     [self.task cancel];
-
+    [self.plusButton cancelWiggle];
 }
 
 -(void)setFrame:(CGRect)frame
 {
     [super setFrame:frame];
+    [self.plusButton centerInSuperview];
 }
 
 - (SBProduct *)getProduct;
@@ -84,7 +81,11 @@
 - (void) updateProduct:(SBProduct *)product;
 {
     self.product = product;
-    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(onSBProductUpdate)
+                                                 name:SBProductUpdateNotification
+                                               object:self.product];
+
     NSInteger likeCount = [[self.product getLikeContactsID] count];
     TLikeState likeState = self.product.like ? ELikeOn : ELikeOff;
 
@@ -101,9 +102,9 @@
 {    
     CGSize thisSize = self.frame.size;
     
-    int margin = 15;
+    int margin = 5;
     if (INTERFACE_IS_PHONE) {
-        margin = 5;
+        margin = 0;
     }
     
     int imageWidth = thisSize.width - margin;
@@ -127,7 +128,6 @@
     [self setImage];
 }
 
-
 - (void) setImage
 {
     id loadTask = nil;
@@ -145,6 +145,13 @@
                               }];
     
     self.task = loadTask;
+}
+
+- (void) wigglePlusButton;
+{
+    if (self.mode == EModeGhost) {
+        [self.plusButton wiggle];
+    }
 }
 
 #pragma mark States
@@ -271,25 +278,29 @@
     
     UIImage *plusImage = [UIImage imageNamed:@"ic-addproduct"];
     
-    self.plusButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
+    UIButton *plusButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 40, 40)];
     
-    [_plusButton setBackgroundImage:backGround
+    [plusButton setBackgroundImage:backGround
                           forState:UIControlStateNormal];
-    [_plusButton setBackgroundImage:backGroundOver
+    [plusButton setBackgroundImage:backGroundOver
                           forState:UIControlStateHighlighted];
-    [_plusButton setImage:plusImage
+    [plusButton setImage:plusImage
                 forState:UIControlStateNormal];
-    [_plusButton setImage:plusImage
+    [plusButton setImage:plusImage
                 forState:UIControlStateHighlighted];
         
-    [_plusButton addTarget:self
+    [plusButton addTarget:self
                    action:@selector(onProductSelected)
          forControlEvents:UIControlEventTouchDown];
 
-    _plusButton.autoresizingMask = (UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin);
+    plusButton.autoresizingMask = (UIViewAutoresizingFlexibleBottomMargin);
+    
+    self.plusButton = plusButton;
     
     [self addSubview:self.plusButton];
     [self.plusButton centerInSuperview];
+
+    [self.plusButton wiggle];
 }
 
 -(void)setOverlayMode;

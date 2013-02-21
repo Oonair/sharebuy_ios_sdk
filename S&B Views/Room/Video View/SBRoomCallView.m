@@ -65,6 +65,8 @@
 - (void) setPreviewLayer
 {
     // Set up previewLayer
+    [self.videoObjects removeObjectForKey:kPreviewLayer];
+    
     SBRoomVideoView *contactLayerView = [SBRoomVideoView videoViewWithFrame:CGRectMake(0, 0,
                                                                                        videoWidth,
                                                                                        videoHeight)];
@@ -86,14 +88,18 @@
     SBRoomVideoView *contactLayerView = [SBRoomVideoView videoViewWithFrame:CGRectMake(0, 0,
                                                                                        videoWidth,
                                                                                        videoHeight)];
-    [contactLayerView setImageMode:UIViewContentModeScaleAspectFit];
+    [contactLayerView setImageMode:UIViewContentModeScaleAspectFill];
+    contactLayerView.clipsToBounds = YES;
     
     [self.videoObjects setObject:contactLayerView forKey:contact.ID];
     [self addSubview:contactLayerView];
 
-    if (!videoEnabled) {
+    if (!videoEnabled)
+    {
         [contactLayerView setNoVideoPlaceholder];
-    } else {
+    }
+    else
+    {
         [contactLayerView setActivityIndicator];
     }
     

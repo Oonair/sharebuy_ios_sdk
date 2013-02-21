@@ -2,7 +2,7 @@
 //  SBEvent.h
 //
 //  Created by Pierluigi Cifani on 26/11/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

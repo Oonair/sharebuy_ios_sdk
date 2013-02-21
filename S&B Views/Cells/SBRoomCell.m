@@ -3,19 +3,24 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 12/20/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
+#import <QuartzCore/QuartzCore.h>
 
 #import "SBRoomCell.h"
 
 #import "SBRoom.h"
 #import "SBContact.h"
+#import "SBProduct.h"
 
 #import "SBEvent.h"
 #import "SBEventMessage.h"
 #import "SBEventProduct.h"
 
 #import "SDWebImageManager.h"
+#import "SBCustomizer.h"
+
+#import "NSDate+Helper.h"
 
 @interface SBRoomCell ()
 @property (nonatomic, strong) id<SDWebImageOperation> task;
@@ -44,6 +49,33 @@
     // Configure the view for the selected state
 }
 
+- (void) awakeFromNib
+{
+    [super awakeFromNib];
+    
+    CALayer * layer = [_roomImageView layer];
+    [layer setMasksToBounds:YES];
+    [layer setCornerRadius:3.0f];
+    [layer setShouldRasterize: YES];
+    [layer setRasterizationScale:[[UIScreen mainScreen] scale]];
+
+    UIView *selectedView = [[UIView alloc] init];
+    [selectedView setBackgroundColor:[UIColor colorWithRed:255/255.0f
+                                                     green:239/255.0f
+                                                      blue:191/255.0f
+                                                     alpha:1.0]];
+    [self setSelectedBackgroundView:selectedView];
+    
+    _roomNameLabel.highlightedTextColor = [UIColor blackColor];
+    _roomLastEventLabel.highlightedTextColor = [UIColor blackColor];
+    _roomLastEventDateLabel.highlightedTextColor = [UIColor darkGrayColor];
+
+    SBCustomizer *customizer = [SBCustomizer sharedCustomizer];
+
+    [_roomPendingEvents setBackgroundImage:[customizer badgeImage]
+                                  forState:UIControlStateNormal];
+}
+
 - (void)dealloc {
     [self destroyImageDownloadTask];
 }
@@ -56,6 +88,7 @@
 
 - (void)setLoadingState
 {
+    self.roomLastEventDateLabel.hidden = YES;
     self.roomLastEventLabel.hidden = YES;
     self.roomPendingEvents.hidden = YES;
     self.activityIndicator.hidden = NO;
@@ -69,13 +102,19 @@
     if ([room getRoomState] == ERoomStateReady)
     {
         self.activityIndicator.hidden = YES;
-        self.roomNameLabel.text = [room getRoomContactsStringRepresentation];
+        
+        NSString *roomParticipants = [room getRoomContactsStringRepresentation];
+        if (roomParticipants == nil) roomParticipants = @"Empty Room";
+        
+        self.roomNameLabel.text = roomParticipants;
         
         [self setImageForRoom:room];
         
         [self setPendingEventsBadge:room];
         
         [self setLastEventLabel:room];
+        
+        [self setLastEventDateLabel:room];
     }
     else
     {
@@ -87,9 +126,11 @@
 
 - (void) setImageForRoom:(SBRoom *)room
 {
+    SBCustomizer *customizer = [SBCustomizer sharedCustomizer];
+    
     if ([[room getRoomContacts] count] == 0)
     {
-        [self.roomImageView setImage:nil];
+        [self.roomImageView setImage:[customizer noContactPlaceholder]];
     }
     else if ([[room getRoomContacts] count] == 1)
     {
@@ -98,21 +139,22 @@
     }
     else
     {
-        [self.roomImageView setImage:[UIImage imageNamed:@"group-chat"]];
+        [self.roomImageView setImage:[customizer groupChatPlaceholder]];
     }
 }
 
 - (void) setImageForContact:(SBContact *)contact
 {
     NSURL *photoURL = [contact getThumbnailURL];
-    
+    SBCustomizer *customizer = [SBCustomizer sharedCustomizer];
+
     if (photoURL) {
         id loadTask = nil;
         SDWebImageManager *manager = [SDWebImageManager sharedManager];
         
         __weak SBRoomCell *blockSelf = self;
         
-        [self.roomImageView setImage:[UIImage imageNamed:@"no-contact"]];
+        [self.roomImageView setImage:[customizer noContactPlaceholder]];
 
         loadTask = [manager downloadWithURL:photoURL
                                     options:SDWebImageLowPriority
@@ -125,7 +167,7 @@
         
         self.task = loadTask;
     } else {
-        [self.roomImageView setImage:[UIImage imageNamed:@"no-contact"]];
+        [self.roomImageView setImage:[customizer noContactPlaceholder]];
     }
 }
 
@@ -134,7 +176,8 @@
     if ([room pendingEvents])
     {
         self.roomPendingEvents.hidden = NO;
-        self.roomPendingEvents.text = [NSString stringWithFormat:@"%d", [room pendingEvents]];
+        [self.roomPendingEvents setTitle:[NSString stringWithFormat:@"%d", [room pendingEvents]]
+                                forState:UIControlStateNormal];
     }
     else
     {
@@ -142,21 +185,51 @@
     }
 
 }
+
+- (void) setLastEventDateLabel:(SBRoom *)room
+{
+    SBEvent *event = [[room getRoomEvents] lastObject];
+    NSDate *date = event.time;
+    if (date) {
+        NSString *output = [NSDate stringForDisplayFromDate:date
+                                                   prefixed:YES
+                                          alwaysDisplayTime:NO];
+        
+        [_roomLastEventDateLabel setText:output];
+        _roomLastEventDateLabel.hidden = NO;
+    }
+}
+
 - (void) setLastEventLabel:(SBRoom *)room
 {
-    self.roomLastEventLabel.hidden = NO;
+    _roomLastEventLabel.hidden = NO;
     
     SBEvent *event = [[room getRoomEvents] lastObject];
     
-    if (event.kind == EEventTextMessage) {
+    if (event.kind == EEventTextMessage)
+    {
         SBEventMessage *message = (SBEventMessage *) event;
-        self.roomLastEventLabel.text = message.body;
-    } else if (event.kind == EEventProductShared) {
-        self.roomLastEventLabel.text =  @"Shared a Product";
-    } else if (event.kind == EEventLikeProduct) {
-        self.roomLastEventLabel.text =  @"Like a Product";
-    } else if (event.kind == EEventLikeStopProduct) {
-        self.roomLastEventLabel.text =  @"Don't Like a Product";
+        _roomLastEventLabel.text = message.body;
+    }
+    else if (event.kind == EEventProductShared)
+    {
+        SBEventProduct *productEvent = (SBEventProduct *) event;
+        SBProduct *product = [room getProductForID:productEvent.productID];
+
+        _roomLastEventLabel.text = [NSString stringWithFormat:@"Shared '%@'", product.name] ;
+    }
+    else if (event.kind == EEventLikeProduct)
+    {
+        SBEventProduct *productEvent = (SBEventProduct *) event;
+        SBProduct *product = [room getProductForID:productEvent.productID];
+        _roomLastEventLabel.text = [NSString stringWithFormat:@"Likes '%@'", product.name] ;
+    }
+    else if (event.kind == EEventLikeStopProduct)
+    {
+        SBEventProduct *productEvent = (SBEventProduct *) event;
+        SBProduct *product = [room getProductForID:productEvent.productID];
+
+        _roomLastEventLabel.text = [NSString stringWithFormat:@"Doesn't like '%@'", product.name] ;
     }
 }
 

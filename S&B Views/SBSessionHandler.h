@@ -3,7 +3,7 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 12/10/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -11,9 +11,9 @@
 
 @class SBRoom;
 
-@interface SBSessionHandler : NSObject <SBViewProviderProtocol, SBRoomNavigationProtocol>
+@interface SBSessionHandler : NSObject <SBViewProviderProtocol, SBRoomNavigationProtocol, SBViewProtocol>
 
-+ (id) sharedHandler;
++ (instancetype) sharedHandler;
 
 - (void) startWithAccountID:(NSString *)accountID
                 mobileAppID:(NSString *)mobileAppID;

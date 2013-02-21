@@ -3,7 +3,7 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 12/10/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "ProductGridViewController.h"
@@ -12,12 +12,18 @@
 #import "GMGridView.h"
 #import "SBJsonParser.h"
 
+#import "ProductPageViewController.h"
 #import "ProductDetailViewController.h"
 
 #import "SBSessionHandler.h"
 
-#define kProductSizePhone   CGSizeMake(85, 110)
-#define kProductSizePad     CGSizeMake(200, 250)
+#import "SBProductContainer.h"
+#import "SBProduct+NSDictionary.h"
+#import "SBNavigationController.h"
+#import "IIViewDeckController.h"
+
+#define kProductSizePhone   CGSizeMake(130, 180)
+#define kProductSizePad     CGSizeMake(272, 350)
 
 @interface ProductGridViewController () <GMGridViewDataSource, GMGridViewActionDelegate>
 {
@@ -26,12 +32,13 @@
 
 @property (nonatomic, strong) GMGridView *productGrid;
 @property (nonatomic, strong) NSArray *products;
+@property (nonatomic, strong) NSDictionary *category;
 
 @end
 
 @implementation ProductGridViewController
 
-- (id)init
+- (id)initWithCategory:(NSDictionary *)category
 {
     if (INTERFACE_IS_PHONE) {
         self = [super initWithNibName:@"ProductGridViewController_Phone" bundle:nil];
@@ -41,10 +48,12 @@
 
     if (self) {
         // Custom initialization
-        self.title = @"eShop";
         
-        [self loadProductsFromJSON];
+        self.category = category;
+        self.products = [_category objectForKey:@"products"];
         
+        self.title = [_category objectForKey:@"name"];
+
         photoDownloadQueue = dispatch_queue_create("com.eshop.photo", DISPATCH_QUEUE_SERIAL);
 
     }
@@ -60,6 +69,8 @@
     [self createProductGrill];
         
     self.navigationItem.rightBarButtonItem = [[SBSessionHandler sharedHandler] getShareBuyButton];
+            
+    self.view.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"bg-diagonalines"]];
 }
 
 - (void)didReceiveMemoryWarning
@@ -68,9 +79,14 @@
     // Dispose of any resources that can be recreated.
 }
 
-- (void) dealloc
+- (void)dealloc
 {
+    NSLog(@"[DEBUG] dealloc %@", self);
+}
 
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
 }
 
 #pragma mark GMGridViewDataSource
@@ -111,24 +127,16 @@
 //////////////////////////////////////////////////////////////
 
 - (void)GMGridView:(GMGridView *)gridView didTapOnItemAtIndex:(NSInteger)position
-{
-    NSLog(@"GRID: user tapped on index %d", position);
-    
-    ProductDetailViewController *aDetailView = [[ProductDetailViewController alloc] initWithProduct:[self.products objectAtIndex:position]];
-    [self.navigationController pushViewController:aDetailView animated:YES];
+{    
+    [self createProductPageViewWithIndex:position];
 }
 
 #pragma mark Internal
 
-- (void) loadProductsFromJSON
-{
-    //Load Products from JSON
-    NSString *filePath = [[NSBundle mainBundle] pathForResource:@"products" ofType:@"json"];
-    NSError *requestError = nil;
-    NSString *productsJsonStr = [NSString stringWithContentsOfFile:filePath encoding:NSASCIIStringEncoding error:&requestError];
-    
-    SBJsonParser *jsonParser = [[SBJsonParser alloc] init];
-    self.products = [jsonParser objectWithString:productsJsonStr];
+- (void) createProductPageViewWithIndex:(NSInteger)index
+{    
+    ProductPageViewController *aPageController = [[ProductPageViewController alloc] initWithProductArray:_products startIndex:index];
+    [self.navigationController pushViewController:aPageController animated:YES];
 }
 
 -(void)createProductGrill
@@ -155,14 +163,17 @@
     cell.deleteButtonIcon = nil;
     
     UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, size.width, size.height)];
+    imageView.clipsToBounds = YES;
     imageView.backgroundColor = [UIColor lightGrayColor];
-    imageView.layer.masksToBounds = NO;
-    imageView.layer.cornerRadius = 8;
+    imageView.layer.masksToBounds = YES;
+    imageView.layer.cornerRadius = 3.0f;
     imageView.layer.shadowColor = [UIColor grayColor].CGColor;
     imageView.layer.shadowOffset = CGSizeMake(5, 5);
     imageView.layer.shadowPath = [UIBezierPath bezierPathWithRect:imageView.bounds].CGPath;
     imageView.layer.shadowRadius = 8;
-    
+    [imageView.layer setShouldRasterize:YES];
+    [imageView.layer setRasterizationScale:[[UIScreen mainScreen] scale]];
+
     cell.contentView = imageView;
     return cell;
 }
@@ -173,6 +184,7 @@
     UIImageView *imageView = (UIImageView *) cell.contentView;
     
     imageView.image = nil;
+    imageView.contentMode = UIViewContentModeScaleAspectFill;
     
     UIActivityIndicatorView *aSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
     [imageView addSubview:aSpinner];
@@ -180,13 +192,8 @@
     [aSpinner startAnimating];
         
     dispatch_async(photoDownloadQueue, ^{
-        
-        NSURL *url;
-        if (INTERFACE_IS_PAD) {
-            url = [NSURL URLWithString:[product objectForKey:@"large_image"]];
-        } else {
-            url = [NSURL URLWithString:[product objectForKey:@"snapshot"]];
-        }
+
+        NSURL *url = [NSURL URLWithString:[product objectForKey:@"large_image_a"]];
         
         NSData *imageData = [NSData dataWithContentsOfURL:url];
         UIImage *aImage = [UIImage imageWithData:imageData];

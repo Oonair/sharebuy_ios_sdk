@@ -3,7 +3,7 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 1/2/13.
-//  Copyright (c) 2013 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBProductPageViewController.h"
@@ -16,9 +16,10 @@
 #import "SBProductViewController.h"
 #import "SBEmptyProductViewController.h"
 
-#import "SBCurrentProductContainer.h"
+#import "SBProductContainer.h"
+#define kUserHasShared @"userHasShared"
 
-@interface SBProductPageViewController () <UIPageViewControllerDataSource, SBCurrentProductContainerProtocol, SBProductViewProtocol>
+@interface SBProductPageViewController () <UIPageViewControllerDataSource, SBCurrentProductProtocol, SBProductViewProtocol>
 
 @property (nonatomic, strong) SBRoom *room;
 @property (nonatomic, strong) NSString *userID;
@@ -32,12 +33,6 @@
 
 @implementation SBProductPageViewController
 
-+ (id) productPageControllerForRoom:(SBRoom *)theCurrentRoom
-                             userID:(NSString *)userID;
-{
-    return [[self alloc] initWithRoom:theCurrentRoom userID:userID];
-}
-
 - (id) initWithRoom:(SBRoom *)room userID:(NSString *)userID
 {
     self = [super initWithTransitionStyle:UIPageViewControllerTransitionStyleScroll
@@ -47,7 +42,7 @@
         self.dataSource = self;
         self.room = room;
         self.userID = userID;
-        [[SBCurrentProductContainer sharedContainer] setContainerDelegate:self];
+        [[SBProductContainer sharedContainer] setContainerDelegate:self];
         self.view.backgroundColor = [UIColor colorWithRed:246/255.0f green:245/255.0f blue:241/255.0f alpha:1.0];
     }
     return self;
@@ -55,10 +50,8 @@
 
 - (void) dealloc
 {
-    [[SBCurrentProductContainer sharedContainer] setContainerDelegate:nil];
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-    
+    [[SBProductContainer sharedContainer] setContainerDelegate:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];    
 }
 
 
@@ -241,7 +234,7 @@
 - (void)setProductDataSource
 {
     //Set Model
-    self.currentProduct = [[SBCurrentProductContainer sharedContainer] getCurrentProduct];
+    self.currentProduct = [[SBProductContainer sharedContainer] getCurrentProduct];
     self.products = [self.room getRoomProducts];
     [self createProductArray];
 }
@@ -294,15 +287,19 @@
                             return;
                         }
                     
+                        [[NSUserDefaults standardUserDefaults] setBool:YES
+                                                                forKey:kUserHasShared];
+
                         [blockSelf processResponse:(SBProduct *)response
                                     forProductView:productView];
-                        
                     }];
         }
             break;
             
         case EModeNormal:
-            
+        {
+            [[SBProductContainer sharedContainer] navigateToProduct:product];
+        }
             break;
 
         case EModeLoading:
@@ -318,6 +315,7 @@
 {
     
 }
+
 -(void) onProductLiked:(SBProductView *)productView;
 {
     SBProduct *product = [productView getProduct];
@@ -328,8 +326,6 @@
         } else {
             [productView updateProduct:response];
         }
-        
-//        [productView setViewMode:EModeNormal];
     };
     
     if (product.like) {

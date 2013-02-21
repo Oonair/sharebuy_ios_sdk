@@ -3,11 +3,15 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 12/21/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
+
+#import <QuartzCore/QuartzCore.h>
 
 #import "SBFBContactCell.h"
 #import "SBFBContact.h"
+
+#import "SBCustomizer.h"
 
 #import "SDWebImageManager.h"
 
@@ -44,6 +48,25 @@
 {
     return 44.0f;
 }
+
+- (void) awakeFromNib
+{
+    CALayer * layer = [_contactImageView layer];
+    [layer setMasksToBounds:YES];
+    [layer setCornerRadius:3.0f];
+    [layer setShouldRasterize: YES];
+    [layer setRasterizationScale:[[UIScreen mainScreen] scale]];
+
+    UIView *selectedView = [[UIView alloc] init];
+    [selectedView setBackgroundColor:[UIColor colorWithRed:255/255.0f
+                                                     green:239/255.0f
+                                                      blue:191/255.0f
+                                                     alpha:1.0]];
+    [self setSelectedBackgroundView:selectedView];
+    
+    _contactNameLabel.highlightedTextColor = [UIColor blackColor];
+}
+
 -(void)configureForContact:(SBFBContact *)contact;
 {
     self.contactNameLabel.text = [contact getFullName];
@@ -69,6 +92,7 @@
 - (void) setImageForContact:(SBFBContact *)contact
 {
     NSURL *photoURL = [contact getThumbnailURL];
+    SBCustomizer *customizer = [SBCustomizer sharedCustomizer];
     
     if (photoURL) {
         id loadTask = nil;
@@ -76,7 +100,7 @@
         
         __weak SBFBContactCell *blockSelf = self;
         
-        [self.contactImageView setImage:[UIImage imageNamed:@"no-contact"]];
+        [self.contactImageView setImage:[customizer noContactPlaceholder]];
         
         loadTask = [manager downloadWithURL:photoURL
                                     options:SDWebImageLowPriority
@@ -89,7 +113,7 @@
         
         self.task = loadTask;
     } else {
-        [self.contactImageView setImage:[UIImage imageNamed:@"no-contact"]];
+        [self.contactImageView setImage:[customizer noContactPlaceholder]];
     }
 }
 

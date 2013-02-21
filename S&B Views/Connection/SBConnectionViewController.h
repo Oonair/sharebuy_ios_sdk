@@ -3,15 +3,14 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 12/10/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
 
 typedef enum  TConnectionViewState{
     EStateConnecting = 0,
-    EStateOffline,
-    EStateConnectToFacebook
+    EStateOffline
 } TConnectionViewState;
 
 @interface SBConnectionViewController : UIViewController
@@ -22,6 +21,5 @@ typedef enum  TConnectionViewState{
 
 @property (strong, nonatomic) IBOutlet UIView *connectingView;
 @property (strong, nonatomic) IBOutlet UIView *offlineView;
-@property (strong, nonatomic) IBOutlet UIView *facebookView;
 
 @end

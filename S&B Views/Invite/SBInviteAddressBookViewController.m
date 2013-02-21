@@ -3,11 +3,12 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 1/14/13.
-//  Copyright (c) 2013 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBInviteAddressBookViewController.h"
 #import "SBAddressBookFetcher.h"
+#import "SBCustomizer.h"
 
 @interface SBInviteAddressBookViewController ()
 @property (strong, nonatomic) IBOutlet UITableView *tableView;
@@ -54,13 +55,10 @@
 
 - (void)configureRightBarButton
 {
-    if (self.navigationItem.rightBarButtonItem == nil) {
-        UIBarButtonItem *doneButton = [[UIBarButtonItem alloc] initWithTitle:@"Done"
-                                                                        style:UIBarButtonItemStylePlain
-                                                                       target:self
-                                                                       action:@selector(onDonePressed:)];
-        
-        [self.navigationItem setRightBarButtonItem:doneButton];
+    if (self.navigationItem.rightBarButtonItem == nil)
+    {
+        UIBarButtonItem *barButton = [[SBCustomizer sharedCustomizer] barButtonWithTitle:@"Done" target:self action:@selector(onDonePressed:)];
+        [self.navigationItem setRightBarButtonItem:barButton];
     }
     
     if ([self.selectedContacts count] == 0) {

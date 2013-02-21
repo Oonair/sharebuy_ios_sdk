@@ -3,7 +3,7 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 12/13/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBRoomViewController.h"
@@ -11,8 +11,19 @@
 
 #import "NSDate+Helper.h"
 
-@interface SBRoomViewController () 
+#import "SBViewProtocols.h"
 
+#import "SBCustomizer.h"
+
+#import "SBFBContact.h"
+#import "ShareBuy.h"
+
+@interface SBRoomViewController () 
+{
+    BOOL mustDismissKeyboard;
+    CGRect chatFullRect;
+    CGRect chatNormalRect;
+}
 @end
 
 @implementation SBRoomViewController
@@ -25,6 +36,8 @@
         // Custom initialization
         self.room = room;
         self.userID = userID;
+        
+        [self.room enterRoom];
     }
     return self;
 }
@@ -39,8 +52,6 @@
     [super viewDidLoad];
     
     // Do any additional setup after loading the view from its nib.    
-    [self.room enterRoom];
-
     [self setChatTable];
     [self setProductPageController];
     
@@ -58,6 +69,16 @@
                                                  name:SBRoomContactNotification
                                                object:self.room];
 
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(onSBPanelClose:)
+                                                 name:SBViewDidDisappear
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(onSBPanelOpen:)
+                                                 name:SBViewDidAppear
+                                               object:nil];
+    
     [self registerForContactStatusNotifications];
 
     //Set up notifications for keyboard events
@@ -75,6 +96,10 @@
     UITapGestureRecognizer *iReco = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTableTap)];
     
     [self.chatTable addGestureRecognizer:iReco];
+    
+    //Placeholder
+    SBFBContact *user = [[ShareBuy sharedInstance] userFacebookRepresentation];
+    [self.chatTextField setPlaceholder:[NSString stringWithFormat:@"%@, chat here...", user.firstName]];
 }
 
 - (void)viewDidUnload {
@@ -84,6 +109,7 @@
 - (void) viewWillAppear:(BOOL)animated
 {
     [self.chatTable scrollChatTableToTheBottom:NO];
+    mustDismissKeyboard = YES;
 }
 
 - (void) viewWillDisappear:(BOOL)animated
@@ -91,7 +117,7 @@
     [super viewWillDisappear:animated];
     
     [self.room leaveRoom];
-    
+    mustDismissKeyboard = NO;
 }
 
 - (void)didReceiveMemoryWarning
@@ -100,14 +126,18 @@
     // Dispose of any resources that can be recreated.
 }
 
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
+{
+    [super willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
+}
 
 #pragma mark View Setup
 
 - (void)setProductPageController
 {
     //Configure Product Scroll
-    self.productPageController = [SBProductPageViewController  productPageControllerForRoom:self.room
-                                                                                     userID:self.userID];
+    self.productPageController = [[SBProductPageViewController alloc] initWithRoom:self.room
+                                                                            userID:self.userID];
     [self.productPageController.view setFrame:CGRectMake(0, 0,
                                                          self.productView.frame.size.width,
                                                          self.productView.frame.size.height)];
@@ -152,6 +182,17 @@
     [self registerForContactStatusNotifications];
 }
 
+- (void) onSBPanelClose:(NSNotification *)notification
+{
+    [self.room leaveRoom];
+    [_chatTextField resignFirstResponder];
+}
+
+- (void) onSBPanelOpen:(NSNotification *)notification
+{
+    [self.room enterRoom];
+}
+
 - (void) registerForContactStatusNotifications
 {
     //Register for SBContactUpdates for this room's contacts
@@ -177,6 +218,8 @@
 
 - (void)onInviteContact
 {
+    self.navigationItem.backBarButtonItem =  [[SBCustomizer sharedCustomizer] barButtonWithTitle:@"Back" target:nil action:nil];
+
     SBInviteFBContactViewController *invite = [[SBInviteFBContactViewController alloc] initWithDelegate:self];
     [self.navigationController pushViewController:invite animated:YES];
 }
@@ -193,6 +236,19 @@
 {
     [_room userIsWritingMessage];
     return YES;
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField;
+{
+    BOOL shouldReturn = NO;
+    if (self.chatTextField.text.length)
+    {
+        NSString *message = self.chatTextField.text;
+        [self sendMessage:message];
+        shouldReturn = YES;
+    }
+    
+    return shouldReturn;
 }
 
 #pragma mark - SBInviteProtocol
@@ -217,7 +273,7 @@
 {
     self.keyboardState = EKeyboardShown;
     
-    if (INTERFACE_IS_PHONE) {
+    if (INTERFACE_IS_PHONE && mustDismissKeyboard) {
         [self hideProduct:aNotification.userInfo];
     }
 }
@@ -226,7 +282,7 @@
 {
     self.keyboardState = EKeyboardHidden;
     
-    if (INTERFACE_IS_PHONE) {
+    if (INTERFACE_IS_PHONE && mustDismissKeyboard) {
         [self showProduct:aNotification.userInfo];
     }
 }
@@ -238,6 +294,39 @@
     [self.chatTextField resignFirstResponder];
 }
 
+- (CGRect) correctKeyboardFrame:(CGRect)aValue
+{
+    CGRect keyboardFrame = aValue;
+    
+    UIWindow *window = [[[UIApplication sharedApplication] windows]objectAtIndex:0];
+    CGRect keyboardFrameConverted = [self.view convertRect:keyboardFrame fromView:window];
+    return keyboardFrameConverted;
+}
+
+- (void)calculateChatViewFramesForKeyboadWithFrame:(CGRect)keyboardFrame
+{
+    if (CGRectIsEmpty(chatNormalRect))
+    {
+        chatNormalRect = self.chatView.frame;
+    }
+    
+    if (CGRectIsEmpty(chatFullRect))
+    {
+        CGRect keyboardFrameRaw = keyboardFrame;
+        
+        CGRect keyboardFrame =  [self correctKeyboardFrame:keyboardFrameRaw];
+        
+        CGFloat avaliableHeight = self.view.frame.size.height;
+        
+        CGFloat coveredSection = keyboardFrame.size.height + self.chatView.frame.size.height - avaliableHeight;
+        
+        chatFullRect = CGRectMake(0,
+                                  0,
+                                  self.chatView.frame.size.width,
+                                  self.chatView.frame.size.height - coveredSection);
+    }
+}
+
 - (void)hideProduct:(NSDictionary *)options
 {
     NSTimeInterval animationDuration;
@@ -245,19 +334,21 @@
     
     [[options objectForKey:UIKeyboardAnimationCurveUserInfoKey] getValue:&animationCurve];
     [[options objectForKey:UIKeyboardAnimationDurationUserInfoKey] getValue:&animationDuration];
-    
-    CGRect newRect = CGRectMake(0,
-                                0,
-                                self.chatView.frame.size.width,
-                                self.chatView.frame.size.height);
+    CGRect keyboardFrameRaw = [[options objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+
+    [self calculateChatViewFramesForKeyboadWithFrame:keyboardFrameRaw];
+        
+    CGRect newRect = chatFullRect;
     
     [UIView animateWithDuration:animationDuration
                           delay:0.0
                         options: animationCurve
                      animations:^{
                          self.chatView.frame = newRect;
+                         [self.chatTable scrollChatTableToTheBottom:YES];
                      }
-                     completion:nil];
+                     completion:^(BOOL finished){
+                     }];
 }
 
 - (void)showProduct:(NSDictionary *)options
@@ -267,19 +358,18 @@
     
     [[options objectForKey:UIKeyboardAnimationCurveUserInfoKey] getValue:&animationCurve];
     [[options objectForKey:UIKeyboardAnimationDurationUserInfoKey] getValue:&animationDuration];
-    
-    CGRect newRect = CGRectMake(0,
-                                self.productView.frame.size.height,
-                                self.chatView.frame.size.width,
-                                self.chatView.frame.size.height);
+        
+    CGRect newRect = chatNormalRect;
 
     [UIView animateWithDuration:animationDuration
                           delay:0.0
                         options: animationCurve
                      animations:^{
                          self.chatView.frame = newRect;
+                         [self.chatTable scrollChatTableToTheBottom:YES];
                      }
-                     completion:nil];
+                     completion:^(BOOL finished){
+                     }];
 }
 
 #pragma mark - NavigationItem customization
@@ -310,8 +400,11 @@
 
 - (void)setRightBarButtonInviteContactButton
 {
-    UIBarButtonItem *barButton = [[UIBarButtonItem alloc] initWithTitle:@"Invite" style:UIBarButtonItemStylePlain target:self action:@selector(onInviteContact)];
-    self.navigationItem.rightBarButtonItem = barButton;
+    SBCustomizer *customizer = [SBCustomizer sharedCustomizer];
+    UIImage *buttonImage = [UIImage imageNamed:@"ic-add"];
+    self.navigationItem.rightBarButtonItem = [customizer barButtonWithImage:buttonImage
+                                                                     target:self
+                                                                     action:@selector(onInviteContact)];
 }
 
 - (void)setRightBarButtonActivityIndicator
@@ -362,7 +455,7 @@
             
             // User conection state label
             UILabel *subtitleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 24, viewWidht - 6, 14)];
-            // Italic fonts make geometricall alligment (used by iOS) different from the optic alligment.
+            // Italic fonts make geometrical alligment (used by iOS) different from the optic alligment.
             // This 6pts offset makes it look ok
             
             subtitleLabel.clearsContextBeforeDrawing = NO;
@@ -384,7 +477,13 @@
         else
         {
             self.navigationItem.titleView = nil;
-            self.title = [self.room getRoomContactsStringRepresentation];
+            NSString *roomTitle = [self.room getRoomContactsStringRepresentation];
+            if (roomTitle == nil)
+            {
+                roomTitle = @"Empty Room";
+            }
+            
+            self.title = roomTitle;
         }
     }
 }

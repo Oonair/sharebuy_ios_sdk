@@ -21,6 +21,10 @@
 @property (nonatomic, strong) UIImage *bubbleSomeOneElse;
 @property (nonatomic, strong) id<SDWebImageOperation> task;
 
+@property (nonatomic, strong) UIColor *colorMine;
+@property (nonatomic, strong) UIColor *colorOther;
+
+
 @end
 
 @implementation UIBubbleTableViewCell
@@ -55,7 +59,10 @@
 -(void) setCustomBubbleFont:(UIFont *)aFont;
 {
     self.contentLabel.font = aFont;
-    self.headerLabel.font = aFont;
+    
+    CGFloat headerSize = [aFont pointSize] - 2;
+    
+    self.headerLabel.font = [aFont fontWithSize:headerSize];
 }
 
 -(void) setBubbleImageMine:(UIImage *)mine someoneElse:(UIImage *)someoneelse;
@@ -64,6 +71,12 @@
     self.bubbleMine = mine;
 }
 
+-(void) setCustomBubbleColorMine:(UIColor *)colorMine
+                      colorOther:(UIColor *)colorOther;
+{
+    self.colorMine = colorMine;
+    self.colorOther = colorOther;
+}
 
 -(void) awakeFromNib
 {
@@ -123,13 +136,13 @@
         self.bubbleImage.image = self.bubbleSomeOneElse;
         
         self.bubbleImage.frame = CGRectMake(x - 18, y - 4, aBubbleSize.width + 30, aBubbleSize.height + 15);
-        self.contentLabel.textColor = [UIColor blackColor];
+        self.contentLabel.textColor = _colorOther;
     }
     else {
         self.bubbleImage.image = self.bubbleMine;
 
         self.bubbleImage.frame = CGRectMake(x - 9, y - 4, aBubbleSize.width + 26, aBubbleSize.height + 15);
-        self.contentLabel.textColor = [UIColor blackColor];
+        self.contentLabel.textColor = _colorMine;
     }
 }
 

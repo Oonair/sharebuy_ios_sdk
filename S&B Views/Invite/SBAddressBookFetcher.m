@@ -3,7 +3,7 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 1/14/13.
-//  Copyright (c) 2013 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBAddressBookFetcher.h"
@@ -45,12 +45,12 @@
         });
         
     } else {
-        
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         addressBook = ABAddressBookCreate();
 #pragma clang diagnostic pop
-
+        
         [self processAddressBook:addressBook
                  completionBlock:completionBlock];
     }

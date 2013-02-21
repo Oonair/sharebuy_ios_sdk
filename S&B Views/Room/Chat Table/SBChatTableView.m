@@ -3,7 +3,7 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 12/17/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBChatTableView.h"
@@ -22,16 +22,21 @@
 //Categories
 #import "NSDate+Helper.h"
 
+#import "SBCustomizer.h"
+
 @interface SBChatTableView() <UITableViewDataSource, UITableViewDelegate>
 
-@property (nonatomic, strong) UIImage *bubbleMine;
-@property (nonatomic, strong) UIImage *bubbleSomeoneElse;
-@property (nonatomic, strong) UIFont *bubbleFont;
+
 @property (nonatomic, strong) SBRoom *room;
 @property (nonatomic, strong) NSArray *messages;
 @property (nonatomic, strong) NSString *userID;
 
 @property (nonatomic) NSTimeInterval snapInterval;
+@property (nonatomic, strong) UIImage *bubbleMine;
+@property (nonatomic, strong) UIImage *bubbleSomeoneElse;
+@property (nonatomic, strong) UIFont *bubbleFont;
+@property (nonatomic, strong) UIColor *bubbleFontColorMine;
+@property (nonatomic, strong) UIColor *bubbleFontColorOther;
 
 @end
 
@@ -49,14 +54,15 @@
     self.dataSource = self;
     
     // UIBubbleTableView default properties
-    self.bubbleMine = [[UIImage imageNamed:@"mine"] stretchableImageWithLeftCapWidth:15
-                                                                        topCapHeight:14];
-    self.bubbleSomeoneElse = [[UIImage imageNamed:@"other"] stretchableImageWithLeftCapWidth:21
-                                                                                topCapHeight:14];
+    SBCustomizer *customizer = [SBCustomizer sharedCustomizer];
     
+    self.bubbleMine = [customizer selfChatBubbleImage];
+    self.bubbleSomeoneElse = [customizer otherChatBubbleImage];
+    self.bubbleFont = [customizer chatBubbleFont];
+    self.bubbleFontColorMine = [customizer selfChatBubbleFontColor];
+    self.bubbleFontColorOther = [customizer otherChatBubbleFontColor];
+
     self.snapInterval = 60*10; //ten minutes
-    
-    self.bubbleFont = [UIFont systemFontOfSize:16.0];    
 }
 
 - (id)init
@@ -193,7 +199,6 @@
     UITableViewCell *cell = nil;
     
     SBEventMessage *msg = [self.messages objectAtIndex:indexPath.row];
-    msg.read = YES;
 
     if (msg.kind == EEventTextMessage)
     {
@@ -276,6 +281,9 @@
                      someoneElse:self.bubbleSomeoneElse];
         [cell setWidth:self.frame.size.width];
         [cell setCustomBubbleFont:self.bubbleFont];
+        [cell setCustomBubbleColorMine:_bubbleFontColorMine
+                            colorOther:_bubbleFontColorOther];
+
     }
 
     NSBubbleType type = ([msg.contactID isEqualToString:self.userID] ?  BubbleTypeMine : BubbleTypeSomeoneElse);

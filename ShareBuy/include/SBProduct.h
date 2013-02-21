@@ -2,7 +2,7 @@
 //  SBProduct.h
 //
 //  Created by Pierluigi Cifani on 26/11/12.
-//  Copyright (c) 2012 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -40,6 +40,7 @@ extern NSString *SBProductUpdateNotification;
 @property (nonatomic, strong) NSString *ID;     // Unique ID of the product
 @property (nonatomic, strong) NSDate *date;     // Date when the product was shared
 @property (nonatomic, strong) NSString *userID; // ID of the user that shared the product
+@property (nonatomic, strong) NSURL *URL; // Unique URL of this product
 
 @property (nonatomic) BOOL like; // Indicates wheterer the current user likes this product
 

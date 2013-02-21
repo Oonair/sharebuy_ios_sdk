@@ -3,7 +3,7 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 1/16/13.
-//  Copyright (c) 2013 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBRoomViewController.h"
@@ -26,6 +26,10 @@ typedef enum  TKeyboardState{
 
 -(void)keyboardWillShow:(NSNotification *)aNotification;
 -(void)keyboardWillHide:(NSNotification *)aNotification;
+
+- (void)onSBRoomStatus:(NSNotification *)notification;
+- (void)onSBContactStatus:(NSNotification *)notification;
+- (void)onSBRoomContact:(NSNotification *)notification;
 
 @property (strong, nonatomic) IBOutlet UIView *productView;
 @property (strong, nonatomic) IBOutlet UIView *chatView;

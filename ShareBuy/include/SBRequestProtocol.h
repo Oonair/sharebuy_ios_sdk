@@ -3,7 +3,7 @@
 //  SBXmpp
 //
 //  Created by Pierluigi Cifani on 11/1/13.
-//  Copyright (c) 2013 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

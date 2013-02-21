@@ -3,11 +3,20 @@
 //  eshop
 //
 //  Created by Pierluigi Cifani on 1/29/13.
-//  Copyright (c) 2013 Pierluigi Cifani. All rights reserved.
+//  Copyright (c) 2013 Oonair. All rights reserved.
 //
 
 #import "SBRemoteEventHandler.h"
 #import "SBRoomViewController.h"
+
+#import <QuartzCore/QuartzCore.h>
+#import <AudioToolbox/AudioToolbox.h>
+#import "PSPDFAlertView.h"
+
+#import "SBCustomizer.h"
+
+#import "SBBarButtonItem.h"
+#import "SBNavigationController.h"
 
 //Model
 #import "SBRoom.h"
@@ -16,8 +25,14 @@
 #import "SBProduct.h"
 #import "SBEventMessage.h"
 #import "SBEventProduct.h"
+#import "SBInvitation.h"
+#import "ShareBuy.h"
+
 
 @interface SBRemoteEventHandler () <SBCallObserverProtocol>
+{
+    BOOL panelOpen;
+}
 
 @property (nonatomic, strong) SBCall *call;
 @property (nonatomic, strong) SBRoom *callRoom;
@@ -25,6 +40,7 @@
 
 @property (nonatomic, weak) id <SBRoomNavigationProtocol> roomDelegate;
 @property (nonatomic, weak) id <SBViewContainerProtocol> containerDelegate;
+@property (nonatomic, weak) id <SBViewProviderProtocol> providerDelegate;
 
 @end
 
@@ -44,8 +60,13 @@
 - (id)init
 {
     self = [super init];
-    if (self) {
-        
+    if (self)
+    {
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(onSBInvitation:)
+                                                     name:SBInvitationNotification
+                                                   object:nil];
+
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(onSBEvent:)
                                                      name:SBRoomEventNotification
@@ -56,19 +77,99 @@
                                                      name:SBRoomCallNotification
                                                    object:nil];
 
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(onSBRoomStatus:)
+                                                     name:SBRoomStatusNotification
+                                                   object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(onSBPanelClose:)
+                                                     name:SBViewDidDisappear
+                                                   object:nil];
+
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(onSBPanelOpen:)
+                                                     name:SBViewDidAppear
+                                                   object:nil];
     }
     
     return self;
 }
+
 
 - (void) setRoomNavigationDelegate:(id <SBRoomNavigationProtocol>)delegate;
 {
     self.roomDelegate = delegate;
 }
 
+- (void) setViewProviderDelegate:(id <SBViewProviderProtocol>)delegate;
+{
+    self.providerDelegate = delegate;
+}
+
 - (void) setViewContainerDelegate:(id <SBViewContainerProtocol>)delegate;
 {
     self.containerDelegate = delegate;
+}
+
++ (void) vibrate;
+{
+    AudioServicesPlaySystemSound (kSystemSoundID_Vibrate);
+}
+
+#pragma mark Notifications
+
+- (void) onSBInvitation:(NSNotification *)noti
+{
+    SBInvitation *invitation = noti.object;
+    NSLog(@"%@", invitation);
+    
+    TShareBuyState state = [[ShareBuy sharedInstance] getShareBuyState];
+
+    switch (state) {
+        case ESBStateWaitingFBLogin:
+        {
+            [self.containerDelegate showShareBuy];
+        }
+            break;
+        
+        case ESBStateOnline:
+        {
+            NSString *invitationString = [NSString stringWithFormat:@"Do you want to accept the invitation from %@", invitation.fromName];
+            
+            PSPDFAlertView *alert = [[PSPDFAlertView alloc] initWithTitle:@"Invitation" message:invitationString];
+            [alert addButtonWithTitle:@"YES" block:^{
+                __block SBRoom *room;
+                room = [[ShareBuy sharedInstance] joinRoom:invitation.roomName
+                                           invitationToken:invitation.invitationToken
+                                           completionBlock:^(id response, NSError *error){
+                                               if (error) return;
+                                        
+                                               [_roomDelegate navigateToRoom:room];
+                                           }];
+            }];
+            
+            [alert setCancelButtonWithTitle:@"NO" block:nil];
+            
+            UIColor *tintColor = [[SBCustomizer sharedCustomizer] tableHeaderColor];
+            [alert setTintColor:tintColor];
+            [alert show];
+        }
+            break;
+ 
+        default:
+            break;
+    }
+}
+
+- (void) onSBRoomStatus:(NSNotification *)noti
+{
+    SBRoom *room = noti.object;
+    
+    if (([room getRoomState] == ERoomStateReady) && (panelOpen == NO))
+    {
+        [self updateBarButtonBadgeValue];
+    }
 }
 
 - (void) onSBEvent:(NSNotification *)noti
@@ -78,6 +179,31 @@
         SBRoom *room = noti.object;
         SBEvent *event = [[room getRoomEvents] lastObject];
         [self configureLocalPushForEvent:event inRoom:room];
+        [SBRemoteEventHandler vibrate];
+    }
+    
+    SBRoom *eventRoom = noti.object;
+    SBRoom *currentRoom = nil;
+    BOOL isDisplayingARoom = NO;
+    
+    SBNavigationController *navigationController = (SBNavigationController *)[_providerDelegate getShareBuyViewController];
+    
+    UIViewController *topViewController = [navigationController topViewController];
+    
+    if ([topViewController isKindOfClass:[SBRoomViewController class]]) {
+        currentRoom = [(SBRoomViewController *)topViewController room];
+        isDisplayingARoom = YES;
+    }
+    
+    if (panelOpen == NO)
+    {
+        [self updateBarButtonBadgeValue];
+        [SBRemoteEventHandler vibrate];
+    }
+    else if ((currentRoom != eventRoom) && isDisplayingARoom)
+    {
+        [navigationController placeDefaultBadgeInBackButtonWithValue:[self roomsWithPendingEvents]];
+        [SBRemoteEventHandler vibrate];
     }
 }
 
@@ -113,9 +239,21 @@
     }
 }
 
+- (void) onSBPanelClose:(NSNotification *)notification
+{
+    panelOpen = NO;
+    [self updateBarButtonBadgeValue];
+}
+
+- (void) onSBPanelOpen:(NSNotification *)notification
+{
+    panelOpen = YES;
+    [self removeBarButtonBadgeValue];
+}
+
 #pragma mark SBCallObserverProtocol
 
-- (void) callTerminated;
+- (void) callDidTerminate;
 {
     if (_callAlert) {
         [_callAlert dismissWithClickedButtonIndex:0 animated:YES];
@@ -200,14 +338,14 @@
     localNotif.alertAction = @"View";
     localNotif.soundName = UILocalNotificationDefaultSoundName;
     
-    if (autoBadge) {
+    if (autoBadge)
+    {
         localNotif.applicationIconBadgeNumber = [[UIApplication sharedApplication] applicationIconBadgeNumber] + 1;
     }
     
     // Schedule the notification
     [[UIApplication sharedApplication] scheduleLocalNotification:localNotif];
 }
-
 
 - (void) answerCall
 {
@@ -244,4 +382,31 @@
     return INTERFACE_IS_PAD;
 }
 
+#pragma mark Badge Support
+
+- (void) updateBarButtonBadgeValue
+{
+    NSInteger roomsWithPendingEvents = [self roomsWithPendingEvents];
+    SBBarButtonItem *currentButton = (SBBarButtonItem *) [self.providerDelegate getShareBuyButton];
+    [currentButton setBadgeValue:roomsWithPendingEvents];
+}
+
+- (void) removeBarButtonBadgeValue
+{
+    SBBarButtonItem *currentButton = (SBBarButtonItem *) [self.providerDelegate getShareBuyButton];
+    [currentButton setBadgeValue:0];
+}
+
+- (NSInteger)roomsWithPendingEvents
+{
+    NSInteger pendingRoomsWithEvents = 0;
+    NSArray *rooms = [[ShareBuy sharedInstance] getRooms];
+    for (SBRoom *room in rooms) {
+        if ([room pendingEvents]) {
+            ++pendingRoomsWithEvents;
+        }
+    }
+    
+    return pendingRoomsWithEvents;
+}
 @end
