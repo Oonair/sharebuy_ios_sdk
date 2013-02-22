@@ -63,6 +63,8 @@ typedef enum  TRoomState{
     ERoomStateDeleting
 } TRoomState;
 
+typedef void(^SBRoomBlock)(void);
+
 @interface SBRoom : NSObject <SBRequestProtocol>
 
 @property (nonatomic, strong) NSString *ID;
@@ -215,5 +217,8 @@ typedef enum  TRoomState{
  */
 
 - (void) exitRoomPermanently:(SBRequestCompletionBlock)completionBlock;
+
+
+- (void) performBlockWhenRoomReady:(SBRoomBlock)block;
 
 @end

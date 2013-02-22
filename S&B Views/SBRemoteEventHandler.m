@@ -28,7 +28,6 @@
 #import "SBInvitation.h"
 #import "ShareBuy.h"
 
-
 @interface SBRemoteEventHandler () <SBCallObserverProtocol>
 {
     BOOL panelOpen;
@@ -83,6 +82,11 @@
                                                    object:nil];
         
         [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(onSBRemoteEventNotification:)
+                                                     name:SBRemoteEventNotification
+                                                   object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(onSBPanelClose:)
                                                      name:SBViewDidDisappear
                                                    object:nil];
@@ -125,41 +129,15 @@
     NSLog(@"%@", invitation);
     
     TShareBuyState state = [[ShareBuy sharedInstance] getShareBuyState];
-
+    
     switch (state) {
-        case ESBStateWaitingFBLogin:
+            
+        default:
         {
             [self.containerDelegate showShareBuy];
         }
             break;
-        
-        case ESBStateOnline:
-        {
-            NSString *invitationString = [NSString stringWithFormat:@"Do you want to accept the invitation from %@", invitation.fromName];
-            
-            PSPDFAlertView *alert = [[PSPDFAlertView alloc] initWithTitle:@"Invitation" message:invitationString];
-            [alert addButtonWithTitle:@"YES" block:^{
-                __block SBRoom *room;
-                room = [[ShareBuy sharedInstance] joinRoom:invitation.roomName
-                                           invitationToken:invitation.invitationToken
-                                           completionBlock:^(id response, NSError *error){
-                                               if (error) return;
-                                        
-                                               [_roomDelegate navigateToRoom:room];
-                                           }];
-            }];
-            
-            [alert setCancelButtonWithTitle:@"NO" block:nil];
-            
-            UIColor *tintColor = [[SBCustomizer sharedCustomizer] tableHeaderColor];
-            [alert setTintColor:tintColor];
-            [alert show];
-        }
-            break;
- 
-        default:
-            break;
-    }
+    }    
 }
 
 - (void) onSBRoomStatus:(NSNotification *)noti
@@ -237,6 +215,12 @@
             [_callAlert show];
         }
     }
+}
+
+- (void) onSBRemoteEventNotification:(NSNotification *)notification
+{
+    SBRoom *room = notification.object;
+    [self.roomDelegate navigateToRoom:room];
 }
 
 - (void) onSBPanelClose:(NSNotification *)notification

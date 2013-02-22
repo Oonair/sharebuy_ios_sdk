@@ -54,6 +54,11 @@ extern NSString *SBRoomInvitationNotification;
  A SBInvitation will be passed*/
 extern NSString *SBInvitationNotification;
 
+
+/* This notification will be sent when S&B is launched with a Push.
+ A SBRoom where the event happened*/
+extern NSString *SBRemoteEventNotification;
+
 /* States for the S&B singleton*/
 typedef enum  TShareBuyState{
     /* Singleton is initialized, waiting for startWithClientID: 
@@ -104,6 +109,11 @@ typedef enum  TShareBuyError {
  - (void)application:didRegisterForRemoteNotificationsWithDeviceToken:
  - (void)application:didFailToRegisterForRemoteNotificationsWithError: */
 - (void) setAppPushToken:(NSData *)pushToken;
+
+
+/* Please forward the NSDictionary provided by the system when launched from a Push Notification:*/
+- (void) handlePushNotification:(NSDictionary *)pushNotification;
+
 
 /* Please forward the URL provided by the system in this AppDelegate method:
  - (BOOL)application:openURL:sourceApplication:annotation:*/
@@ -171,11 +181,6 @@ typedef enum  TShareBuyError {
  */
 - (SBRoom *) createRoomInviteUserWithMail:(NSString *)mail
                           completionBlock:(SBRequestCompletionBlock)completionBlock;
-
-
-- (SBRoom *) joinRoom:(NSString *)roomName
-      invitationToken:(NSString *)invitationToken
-      completionBlock:(SBRequestCompletionBlock)completionBlock;
 
 /**
  * Requests if there are available rooms with the given user

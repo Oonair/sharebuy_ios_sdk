@@ -37,6 +37,9 @@
     
     [self setUpShareBuy];
 
+    NSDictionary *pushNotification = [launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+    [self.shareBuyHandler handlePushNotification:pushNotification];
+
     self.window.rootViewController = [self setUpViews];
     [self.window makeKeyAndVisible];
     

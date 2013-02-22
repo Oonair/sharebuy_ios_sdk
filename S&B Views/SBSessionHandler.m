@@ -88,7 +88,7 @@ NSString *SBViewDidDisappear    = @"SBViewDidDisappear";
     [SBProductContainer sharedContainer];
     [[SBRemoteEventHandler sharedHandler] setRoomNavigationDelegate:self];
     [[SBRemoteEventHandler sharedHandler] setViewProviderDelegate:self];
-    
+
     //Clear notifications from Notification center
     [[UIApplication sharedApplication] setApplicationIconBadgeNumber:1];
     [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
@@ -116,6 +116,11 @@ NSString *SBViewDidDisappear    = @"SBViewDidDisappear";
 - (void) handleAppWillTerminate;
 {
     [shareBuy handleAppWillTerminate];
+}
+
+- (void) handlePushNotification:(NSDictionary *)pushNotification;
+{
+    [shareBuy handlePushNotification:pushNotification];
 }
 
 - (void) setAppPushToken:(NSData *)token;

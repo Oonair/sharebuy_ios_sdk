@@ -20,9 +20,11 @@
 
 - (void) setViewContainerDelegate:(id <SBViewContainerProtocol>) delegate;
 
+//From UIAppDelegate
 - (void) setAppPushToken:(NSData *)token;
 - (BOOL) handleOpenFromURL:(NSURL *)url;
 - (void) handleDidBecomeActive;
 - (void) handleAppWillTerminate;
+- (void) handlePushNotification:(NSDictionary *)pushNotification;
 
 @end
