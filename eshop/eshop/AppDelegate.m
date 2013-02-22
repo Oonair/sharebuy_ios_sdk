@@ -179,13 +179,8 @@
     self.shareBuyHandler = [SBSessionHandler sharedHandler];
     [self.shareBuyHandler setViewContainerDelegate:self];
 
-#ifdef DEBUG
-    [self.shareBuyHandler startWithAccountID:@"upo2w2h2laas"
-                                 mobileAppID:@"q1opwe"];
-#else
-    [self.shareBuyHandler startWithAccountID:@"b69rbqhkfu6c"
-                                 mobileAppID:@"m5uOco"];
-#endif
+    [self.shareBuyHandler startWithAccountID:@"youraccountID"
+                                 mobileAppID:@"yourmobileAppID"];
 }
 
 - (void) customizeElements

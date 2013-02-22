@@ -72,10 +72,7 @@ NSString *SBViewDidDisappear    = @"SBViewDidDisappear";
                                              selector:@selector(onSBError:)
                                                  name:SBErrorNotification
                                                object:nil];
-#ifdef DEBUG
-    [shareBuy setTestEnvironment];
-#endif
-    
+
     [shareBuy startWithAccountID:accountID
                      mobileAppID:mobileAppID];
     
@@ -219,6 +216,17 @@ NSString *SBViewDidDisappear    = @"SBViewDidDisappear";
         case ESBXmppUnreachable:
             errorMessage = @"XMPP disconnected";
             break;
+            
+        case ESBConnectedFromOtherDevice:
+        {
+            if ([self.currentViewController isKindOfClass:[SBConnectionViewController class]])
+            {
+                SBConnectionViewController *connection = (SBConnectionViewController *) self.currentViewController;
+                [connection setCurrentState:EStateConnectedFromAnotherDevice];
+            }
+        }
+            break;
+
     }
     
     if (errorMessage) {

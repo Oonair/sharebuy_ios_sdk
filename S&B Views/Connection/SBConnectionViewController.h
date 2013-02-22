@@ -10,6 +10,7 @@
 
 typedef enum  TConnectionViewState{
     EStateConnecting = 0,
+    EStateConnectedFromAnotherDevice,
     EStateOffline
 } TConnectionViewState;
 

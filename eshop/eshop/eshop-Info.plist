@@ -36,11 +36,12 @@
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>sbq1opwe</string>
-				<string>fb387545131306672</string>
-				<string>fb549087875108532</string>
+				<string>sbyourmobileAppID</string>
+				<string>fbyourFacebookAppID</string>
 			</array>
 		</dict>
 	</array>

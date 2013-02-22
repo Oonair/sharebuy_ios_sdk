@@ -16,6 +16,7 @@
     TConnectionViewState state;
 }
 @property (weak, nonatomic) IBOutlet UIButton *reconnectButton;
+@property (weak, nonatomic) IBOutlet UILabel *errorMessageLabel;
 
 @end
 
@@ -93,6 +94,14 @@
             break;
         case EStateOffline:
         {
+            self.errorMessageLabel.text = @"Connection Error";
+            self.connectingView.hidden = YES;
+            self.offlineView.hidden = NO;
+        }
+            break;
+        case EStateConnectedFromAnotherDevice:
+        {
+            self.errorMessageLabel.text = @"Connected from Other Device";
             self.connectingView.hidden = YES;
             self.offlineView.hidden = NO;
         }

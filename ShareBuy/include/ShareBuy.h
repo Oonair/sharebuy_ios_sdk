@@ -89,7 +89,10 @@ typedef enum  TShareBuyError {
     ESBXmppUnreachable,
     
     /* Error initializing Push Notification Support*/
-    ESBPushFailed
+    ESBPushFailed,
+
+    /* Connected from other Device*/
+    ESBConnectedFromOtherDevice
 } TShareBuyError;
 
 @interface ShareBuy : NSObject <SBRequestProtocol>

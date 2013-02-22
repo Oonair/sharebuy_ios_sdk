@@ -44,7 +44,7 @@
 							<object class="IBUILabel" id="197368050">
 								<reference key="NSNextResponder" ref="885052227"/>
 								<int key="NSvFlags">301</int>
-								<string key="NSFrame">{{37, 12}, {162, 21}}</string>
+								<string key="NSFrame">{{8, 12}, {221, 21}}</string>
 								<reference key="NSSuperview" ref="885052227"/>
 								<reference key="NSWindow"/>
 								<reference key="NSNextKeyView" ref="344028707"/>
@@ -62,6 +62,7 @@
 								</object>
 								<nil key="IBUIHighlightedColor"/>
 								<int key="IBUIBaselineAdjustment">0</int>
+								<float key="IBUIMinimumScaleFactor">0.60000002384185791</float>
 								<int key="IBUITextAlignment">1</int>
 								<object class="IBUIFontDescription" key="IBUIFontDescription">
 									<int key="type">2</int>
@@ -72,7 +73,6 @@
 									<double key="NSSize">17</double>
 									<int key="NSfFlags">16</int>
 								</object>
-								<bool key="IBUIAdjustsFontSizeToFit">NO</bool>
 							</object>
 							<object class="IBUIButton" id="344028707">
 								<reference key="NSNextResponder" ref="885052227"/>
@@ -243,6 +243,14 @@
 					<int key="connectionID">28</int>
 				</object>
 				<object class="IBConnectionRecord">
+					<object class="IBCocoaTouchOutletConnection" key="connection">
+						<string key="label">errorMessageLabel</string>
+						<reference key="source" ref="372490531"/>
+						<reference key="destination" ref="197368050"/>
+					</object>
+					<int key="connectionID">29</int>
+				</object>
+				<object class="IBConnectionRecord">
 					<object class="IBCocoaTouchEventConnection" key="connection">
 						<string key="label">onReconnect:</string>
 						<reference key="source" ref="344028707"/>
@@ -311,13 +319,13 @@
 						<string key="objectName">Connecting View</string>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">13</int>
-						<reference key="object" ref="520490023"/>
+						<int key="objectID">12</int>
+						<reference key="object" ref="898813713"/>
 						<reference key="parent" ref="1015291107"/>
 					</object>
 					<object class="IBObjectRecord">
-						<int key="objectID">12</int>
-						<reference key="object" ref="898813713"/>
+						<int key="objectID">13</int>
+						<reference key="object" ref="520490023"/>
 						<reference key="parent" ref="1015291107"/>
 					</object>
 				</array>
@@ -339,7 +347,7 @@
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">28</int>
+			<int key="maxID">29</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">
@@ -359,6 +367,7 @@
 					</object>
 					<dictionary class="NSMutableDictionary" key="outlets">
 						<string key="connectingView">UIView</string>
+						<string key="errorMessageLabel">UILabel</string>
 						<string key="offlineView">UIView</string>
 						<string key="reconnectButton">UIButton</string>
 					</dictionary>
@@ -366,6 +375,10 @@
 						<object class="IBToOneOutletInfo" key="connectingView">
 							<string key="name">connectingView</string>
 							<string key="candidateClassName">UIView</string>
+						</object>
+						<object class="IBToOneOutletInfo" key="errorMessageLabel">
+							<string key="name">errorMessageLabel</string>
+							<string key="candidateClassName">UILabel</string>
 						</object>
 						<object class="IBToOneOutletInfo" key="offlineView">
 							<string key="name">offlineView</string>

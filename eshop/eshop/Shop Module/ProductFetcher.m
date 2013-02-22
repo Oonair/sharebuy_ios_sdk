@@ -18,11 +18,8 @@
         
         NSURL *productsURL = nil;
         
-#ifdef DEBUG
-        productsURL = [NSURL URLWithString:@"http://eshop.test.oonair.net/categories/"];
-#else 
         productsURL = [NSURL URLWithString:@"http://eshop.oonair.net/categories/"];
-#endif
+
         NSError *error = nil;
         NSData *data = [NSData dataWithContentsOfURL:productsURL
                                              options:NSDataReadingUncached
